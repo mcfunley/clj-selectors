@@ -7,139 +7,139 @@
 ;; ==============================================================================
 ;; compilation tests
 
-(deftest compile-any
+(deftest parse-any
   (is (= `(selectors/match-element-type :any)
-         (compile-selector "*"))))
+         (parse-selector "*"))))
 
-(deftest compile-element-type
+(deftest parse-element-type
   (is (= `(selectors/match-element-type "foo")
-         (compile-selector "foo"))))
+         (parse-selector "foo"))))
 
-(deftest compile-with-child
+(deftest parse-with-child
   (is (= `(selectors/match-with-child
            (selectors/match-element-type "foo")
            (selectors/match-element-type "bar"))
-         (compile-selector "foo > bar"))))
+         (parse-selector "foo > bar"))))
 
-(deftest compile-immediately-preceding
+(deftest parse-immediately-preceding
   (is (= `(selectors/match-immediately-preceding
            (selectors/match-element-type "foo")
            (selectors/match-element-type "bar"))
-         (compile-selector "foo + bar"))))
+         (parse-selector "foo + bar"))))
 
-(deftest compile-preceding
+(deftest parse-preceding
   (is (= `(selectors/match-preceding
            (selectors/match-element-type "foo")
            (selectors/match-element-type "bar"))
-         (compile-selector "foo ~ bar"))))
+         (parse-selector "foo ~ bar"))))
 
-(deftest compile-extra-whitespace
+(deftest parse-extra-whitespace
   (is (= `(selectors/match-preceding
            (selectors/match-element-type "foo")
            (selectors/match-element-type "bar"))
-         (compile-selector "foo   ~ bar "))))
+         (parse-selector "foo   ~ bar "))))
 
-(deftest compile-ancestor
+(deftest parse-ancestor
   (is (= `(selectors/match-ancestor
            (selectors/match-element-type "foo")
            (selectors/match-element-type "bar"))
-         (compile-selector "foo bar"))))
+         (parse-selector "foo bar"))))
 
-(deftest compile-ancestor-class-match
+(deftest parse-ancestor-class-match
   (is (= `(selectors/match-ancestor
            (selectors/match-element-type "foo")
            (selectors/match-class "bar"))
-         (compile-selector "foo .bar"))))
+         (parse-selector "foo .bar"))))
 
-(deftest compile-type-and-id
+(deftest parse-type-and-id
   (is (= `(selectors/match-all
            ((selectors/match-element-type "foo")
             (selectors/match-id "bar")))
-         (compile-selector "foo#bar"))))
+         (parse-selector "foo#bar"))))
 
-(deftest compile-type-id-and-class
+(deftest parse-type-id-and-class
   (is (= `(selectors/match-all
            ((selectors/match-element-type "foo")
             (selectors/match-id "bar")
             (selectors/match-class "baz")))
-         (compile-selector "foo#bar.baz"))))
+         (parse-selector "foo#bar.baz"))))
 
-(deftest compile-any-with-class
+(deftest parse-any-with-class
   (is (= `(selectors/match-all
            ((selectors/match-element-type :any)
             (selectors/match-class "foo")))
-         (compile-selector "*.foo"))))
+         (parse-selector "*.foo"))))
 
-(deftest compile-first-line
+(deftest parse-first-line
   (is (= `(selectors/match-all
            ((selectors/match-element-type "foo")
             (selectors/select-first-line))))
-      (compile-selector "foo::first-line")))
+      (parse-selector "foo::first-line")))
 
-(deftest compile-first-letter
+(deftest parse-first-letter
   (is (= `(selectors/match-all
            ((selectors/match-element-type "foo")
             (selectors/match-class "bar")
             (selectors/select-first-letter))))
-      (compile-selector "foo.bar::first-letter")))
+      (parse-selector "foo.bar::first-letter")))
 
 
-(deftest compile-having-attribute
+(deftest parse-having-attribute
   (is (= `(selectors/match-all
            ((selectors/match-element-type "foo")
             (selectors/match-attribute-exists "bar")))
-         (compile-selector "foo[bar]"))))
+         (parse-selector "foo[bar]"))))
 
-(deftest compile-having-two-attributes
+(deftest parse-having-two-attributes
   (is (= `(selectors/match-all
            ((selectors/match-element-type "foo")
             (selectors/match-attribute-exists "bar")
             (selectors/match-attribute-exists "baz")))
-         (compile-selector "foo[bar baz]"))))
+         (parse-selector "foo[bar baz]"))))
 
-(deftest compile-attribute-contains-word
+(deftest parse-attribute-contains-word
   (is (= `(selectors/match-all
            ((selectors/match-element-type "foo")
             (selectors/match-attribute-value-contains-word "bar" "baz")))
-         (compile-selector "foo[bar ~= \"baz\"]"))))
+         (parse-selector "foo[bar ~= \"baz\"]"))))
 
-(deftest compile-attribute-value-begins
+(deftest parse-attribute-value-begins
   (is (= `(selectors/match-all
            ((selectors/match-element-type "foo")
             (selectors/match-class "bar")
             (selectors/match-attribute-value-begins "baz" "fizz buzz")))
-         (compile-selector "foo.bar[baz^=\"fizz buzz\"]"))))
+         (parse-selector "foo.bar[baz^=\"fizz buzz\"]"))))
 
-(deftest compile-attribute-value-ends
+(deftest parse-attribute-value-ends
   (is (= `(selectors/match-all
            ((selectors/match-element-type :any)
             (selectors/match-attribute-value-ends "foo" "bar")))
-         (compile-selector "*[foo $= \"bar\"]"))))
+         (parse-selector "*[foo $= \"bar\"]"))))
 
-(deftest compile-attribute-value-contains-pattern
+(deftest parse-attribute-value-contains-pattern
   (is (= `(selectors/match-all
            ((selectors/match-element-type :any)
             (selectors/match-id "crap")
             (selectors/match-attribute-value-contains-pattern "foo" "bar")))
-         (compile-selector "*#crap[foo *=   \"bar\"]"))))
+         (parse-selector "*#crap[foo *=   \"bar\"]"))))
 
-(deftest compile-wacky-attribute-value
+(deftest parse-wacky-attribute-value
   (is (= `(selectors/match-all
            ((selectors/match-class "foo")
             (selectors/match-attribute-exists "bar")
             (selectors/match-attribute-value-lang-subcode "baz" "en")
             (selectors/match-attribute-exists "goo")))
-         (compile-selector ".foo[bar baz|=\"en\" goo  ]"))))
+         (parse-selector ".foo[bar baz|=\"en\" goo  ]"))))
 
-(deftest compile-match-attribute-value
+(deftest parse-match-attribute-value
   (is (= `(selectors/match-all
            ((selectors/match-id "foo")
             (selectors/match-attribute-exists "bar")
             (selectors/match-attribute-value "baz" "goo ball")
             (selectors/match-attribute-value-contains-pattern "qux" "quick")))
-         (compile-selector "#foo[bar baz=\"goo ball\" qux *= \"quick\"]"))))
+         (parse-selector "#foo[bar baz=\"goo ball\" qux *= \"quick\"]"))))
 
-(deftest compile-complicated-first-line
+(deftest parse-complicated-first-line
   (is (= `(selectors/match-ancestor
            (selectors/match-all
             ((selectors/match-id "foo")
@@ -147,21 +147,21 @@
            (selectors/match-all
             ((selectors/match-class "qux")
              (selectors/select-first-line))))
-         (compile-selector "#foo[bar=\"baz\"] .qux::first-line"))))
+         (parse-selector "#foo[bar=\"baz\"] .qux::first-line"))))
 
-(deftest compile-first-line
+(deftest parse-first-line
   (is (= `(selectors/match-all
            ((selectors/match-class "foo")
             (selectors/select-first-line)))
-         (compile-selector ".foo::first-line"))))
+         (parse-selector ".foo::first-line"))))
 
-(deftest compile-first-letter
+(deftest parse-first-letter
   (is (= `(selectors/match-with-child
            (selectors/match-element-type "foo")
            (selectors/match-all
             ((selectors/match-id "bar")
              (selectors/select-first-letter))))
-         (compile-selector "foo > #bar::first-letter"))))
+         (parse-selector "foo > #bar::first-letter"))))
 
 ;; ==============================================================================
 ;; tokenizing tests

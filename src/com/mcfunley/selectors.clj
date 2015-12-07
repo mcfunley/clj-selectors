@@ -89,7 +89,7 @@
 ;; =============================================================================
 ;; parsing
 
-(declare consume-tokens)
+(declare consume-tokens simplify)
 
 
 (defn symbol-to-matcher
@@ -144,7 +144,7 @@
 
 (defn parse-pseudo-class
   [token]
-  :todo-pseudo-class)    
+  :todo-pseudo-class) 
 
 
 (defn parse-token
@@ -179,6 +179,12 @@
     [a & r]     `(match-ancestor ~(parse-token a) ~(consume-tokens r))))
 
 
+(defn parse-selector
+  [selector]
+  (simplify
+   (let [tokens (tokenize-selector selector)]
+     (consume-tokens tokens))))
+
 
 ;; =============================================================================
 ;; simplifying
@@ -211,6 +217,7 @@
     :else            expr-tree))
 
 
+
 ;; =============================================================================
 ;; matching
 
@@ -225,14 +232,7 @@
 ;; public interface
 
 
-(defn compile-selector
-  [selector]
-  (simplify
-   (let [tokens (tokenize-selector selector)]
-     (consume-tokens tokens))))
-
-
-(defn $
-  [selector tree]
-  (let [matcher (compile-selector selector)]
-    (match-element tree nil tree matcher)))
+;; (defn $
+;;   [selector tree]
+;;   (let [matcher (compile-selector selector)]
+;;     (match-element tree nil tree matcher)))
