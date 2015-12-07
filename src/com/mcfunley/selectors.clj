@@ -232,6 +232,16 @@
 ;; public interface
 
 
+(defrecord Selector [source expression match])
+
+(defn selector? [x] (= Selector (type x)))
+
+(defn compile-selector
+  [source]
+  (let [expression (parse-selector source)]
+    (Selector. source expression nil)))
+
+
 ;; (defn $
 ;;   [selector tree]
 ;;   (let [matcher (compile-selector selector)]

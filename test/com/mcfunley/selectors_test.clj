@@ -3,6 +3,8 @@
             [com.mcfunley.selectors :refer :all]))
 
 (alias 'selectors 'com.mcfunley.selectors)
+(import 'com.mcfunley.selectors.Selector)
+
 
 ;; ==============================================================================
 ;; compilation tests
@@ -354,3 +356,32 @@
 (deftest simplify-single-select
   (is (= '(com.mcfunley.selectors/select-first-line)
          (simplify '(com.mcfunley.selectors/select-first-line)))))
+
+
+;; ==============================================================================
+;; compiling
+
+(deftest compile-sets-source
+  (is (= "foo > bar"
+         (:source (compile-selector "foo > bar")))))
+
+(deftest compile-sets-expression
+  (is (= `(selectors/match-with-child
+           (selectors/match-element-type "foo")
+           (selectors/match-element-type "bar"))
+         (:expression (compile-selector "foo > bar")))))
+
+  
+
+;; ==============================================================================
+;; selector?
+
+(deftest selector?-identifies-selector
+  (is (selector? (Selector. "foo" '(expr and stuff) identity))))
+
+(deftest selector?-works-nil (is (not (selector? nil))))
+
+(deftest selector?-works-number (is (not (selector? 1))))
+
+
+
