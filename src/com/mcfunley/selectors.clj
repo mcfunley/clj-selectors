@@ -232,7 +232,9 @@
 ;; public interface
 
 
-(defrecord Selector [source expression match])
+(defrecord Selector [source expression match]
+  clojure.lang.IFn
+  (invoke [& args] (match args)))
 
 (defn selector? [x] (= Selector (type x)))
 

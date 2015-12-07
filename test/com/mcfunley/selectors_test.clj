@@ -371,7 +371,6 @@
            (selectors/match-element-type "bar"))
          (:expression (compile-selector "foo > bar")))))
 
-  
 
 ;; ==============================================================================
 ;; selector?
@@ -384,4 +383,10 @@
 (deftest selector?-works-number (is (not (selector? 1))))
 
 
+;; ==============================================================================
+;; Selector
 
+(deftest selector-invocation
+  (is (= '(:foo)
+         ((Selector. "" nil #(list %1)) :foo))))
+     
