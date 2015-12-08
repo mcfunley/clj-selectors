@@ -219,13 +219,85 @@
 
 
 ;; =============================================================================
+;; MatchContext
+
+(defrecord MatchContext [tag attributes children root parent])
+
+(defn make-context
+  ([[tag attributes & children]]
+   (MatchContext. tag attributes children nil nil))
+
+  ([[tag attributes & children] root parent]
+   (MatchContext. tag attributes children root parent)))
+
+(defn element [context]
+  (vec (concat ((juxt :tag :attributes) context) (:children context))))
+
+(defn root [context] (or (:root context) context))
+
+(defn children
+  [context]
+  (map #(make-context %1 (root context) context) (:children context)))
+
+(defn descendant-seq
+  [context]
+  (rest (tree-seq identity children context)))
+
+
+;; =============================================================================
 ;; matching
 
-(defn match-element
-  [root parent elem matcher]
-  (let [[tag attributes children] elem]
-    (filter some? (cons (matcher root parent elem)
-                        (map #(match-element root elem %1 matcher) children)))))
+(defn- evaluate-matcher-predicate
+  [predicate]
+  (fn [context]
+    (if (predicate context)
+      (list (element context))
+      nil)))
+
+(defmacro defmatcher
+  [name arglist predicate]
+  `(defn ~name ~arglist (evaluate-matcher-predicate ~predicate)))
+    
+
+(defmatcher match-element-type
+  [name]
+  (let [tag-key (keyword name)]
+    (fn [context] (= (:tag context) tag-key))))
+
+(defmatcher match-id
+  [name]
+  (fn [context] (= (-> context :attributes :id) name)))
+
+(defmatcher match-class
+  [name]
+  (fn [context]
+    (let [class-attr (-> context :attributes :class)]
+      (when class-attr
+        (some #(= name %) (clojure.string/split class-attr #"\s+"))))))
+
+(defmatcher match-all
+  [matchers]
+  (fn [context] (every? identity (map #(%1 context) matchers))))
+
+
+(defn match-descendants
+  [descendant-matcher context]
+  (let [matches (map #(descendant-matcher %1) (descendant-seq context))]
+    (map first (filter some? matches))))
+
+(defn match-ancestor
+  [ancestor-matcher descendant-matcher]
+  (fn [context]
+    (and (ancestor-matcher context)
+         (match-descendants descendant-matcher context))))
+
+
+
+;; (defn match-element
+;;   [root parent elem matcher]
+;;   (let [[tag attributes children] elem]
+;;     (filter some? (cons (matcher root parent elem)
+;;                         (map #(match-element root elem %1 matcher) children)))))
 
 
 ;; =============================================================================
@@ -236,15 +308,18 @@
   clojure.lang.IFn
   (invoke [& args] (match args)))
 
-(defn selector? [x] (= Selector (type x)))
+(defn selector? [x] (isa? (type x) Selector))
 
 (defn compile-selector
   [source]
   (let [expression (parse-selector source)]
     (Selector. source expression nil)))
 
+(defn $
+  [selector tree]
+  (let [s (if (selector? selector) selector (compile-selector selector))
+        root-context (make-context tree)]
+    :todo))
+    
 
-;; (defn $
-;;   [selector tree]
-;;   (let [matcher (compile-selector selector)]
-;;     (match-element tree nil tree matcher)))
+

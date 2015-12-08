@@ -1,9 +1,12 @@
 (ns com.mcfunley.selectors-test
   (:require [clojure.test :refer :all]
-            [com.mcfunley.selectors :refer :all]))
+            [com.mcfunley.selectors :refer :all]
+            [pl.danieljanus.tagsoup]))
 
 (alias 'selectors 'com.mcfunley.selectors)
+(alias 'ts 'pl.danieljanus.tagsoup)
 (import 'com.mcfunley.selectors.Selector)
+(import 'com.mcfunley.selectors.MatchContext)
 
 
 ;; ==============================================================================
@@ -384,9 +387,153 @@
 
 
 ;; ==============================================================================
+;; MatchContext
+
+(deftest element-works
+  (let [el [:foo {}]
+        c (make-context el)]
+    (is (= (element c) el))))
+
+(deftest children-works
+  (let [cs [[:bar {}] [:baz {}]]
+        el (make-context (vec `(:foo {} ~@cs)))]
+    (is (= (children el) (map #(make-context %1 el el) cs)))))
+
+(deftest no-children
+  (let [el (make-context [:foo {}])]
+    (is (empty? (children el)))))
+
+
+(deftest descendant-seq-works
+  (let [tree [:foo {} [:bar {}] [:baz {} [:goo {}]]]]
+    (is (= '(:bar :baz :goo)
+           (map :tag (descendant-seq (make-context tree)))))))
+
+(deftest descendant-seq-no-children
+  (is (empty? (descendant-seq (make-context [:foo {}])))))
+    
+
+
+;; ==============================================================================
 ;; Selector
 
 (deftest selector-invocation
   (is (= '(:foo)
          ((Selector. "" nil #(list %1)) :foo))))
-     
+
+
+;; ==============================================================================
+;; matchers
+
+(deftest match-element-type-works
+  (is ((match-element-type "foo") (make-context [:foo {}]))))
+
+(deftest match-element-type-miss
+  (is (not ((match-element-type "foo") (make-context [:bar {}])))))
+
+(deftest match-element-type-returns-element
+  (let [element [:foo {}]]
+    (is (= ((match-element-type "foo") (make-context element))
+           (list element)))))
+
+(deftest match-id-works
+  (is ((match-id "bar") (make-context [:foo { :id "bar" }]))))
+
+(deftest match-id-miss
+  (is (not ((match-id "baz") (make-context [:foo { :id "bar" }])))))
+
+(deftest match-id-returns-element
+  (let [element [:foo { :id "bar" }]]
+    (is (= ((match-id "bar") (make-context element)) (list element)))))
+
+(deftest match-id-no-id-attribute
+  (is (not ((match-id "baz") (make-context [:foo {}])))))
+
+(deftest match-all-works
+  (is (let [expr (match-all
+                  (list (match-element-type "foo")
+                        (match-id "bar")))]
+        (expr (make-context [:foo { :id "bar" }])))))
+
+(deftest match-all-fail
+  (is (not (let [expr (match-all
+                       (list (match-element-type "foo")
+                             (match-id "bar")))]
+             (expr (make-context [:foo { :id "baz" }]))))))
+
+(deftest match-class-works-one-class
+  (is ((match-class "foo") (make-context [:div { :class "foo" }]))))
+
+(deftest match-class-miss
+  (is (not ((match-class "foo") (make-context [:div { :class "bar" }])))))
+
+(deftest match-class-many-classes
+  (is ((match-class "foo") (make-context [:div { :class "bar foo" }]))))
+
+(deftest match-class-whitespace-significant
+  (is (not ((match-class "foo") (make-context [:div { :class "bar foobar" }])))))
+
+(deftest match-class-no-class-attr
+  (is (not ((match-class "foo") (make-context [:div {}])))))
+
+(deftest match-class-case-sensitive
+  (is (not ((match-class "foo") (make-context [:div { :class "Foo" }])))))
+
+(deftest match-class-returns-element
+  (let [element [:div { :class "foo bar baz" }]]
+    (is (= ((match-class "bar") (make-context element)) (list element)))))
+
+
+(deftest match-descendants-one-level
+  (let [element [:a {} [:b { :id "x" }]]]
+    (is (= '([:b { :id "x" }])
+           (match-descendants (match-id "x") (make-context element))))))
+
+(deftest match-descendants-multiple
+  (let [element [:a {} [:b { :id "x" }] [:c { :id "x" }]]]
+    (is (= '([:b { :id "x" }] [:c { :id "x" }])
+           (match-descendants (match-id "x") (make-context element))))))
+
+(deftest match-descendants-two-levels
+  (let [element [:a {} [:b { :id "x" } [:c { :id "x" }]]]]
+    (is (= '([:b { :id "x" } [ :c { :id "x" }]] [:c { :id "x" }])
+           (match-descendants (match-id "x") (make-context element))))))
+
+(deftest match-descendants-many-levels-multiple-branches
+  (let [element [:a {}
+                 [:b {:id "x"}
+                  [:c {:id "x"}]]
+                 [:d {}
+                  [:e {}
+                   [:f {:id "x"}] [:g {:id "x"}]]]]
+        matches (match-descendants (match-id "x") (make-context element))]
+    
+    (is (= '(:b :c :f :g)
+           (map first matches)))))
+
+(deftest match-ancestor-works
+  (let [expr (match-ancestor (match-element-type "foo") (match-id "goo"))
+        tree [:foo {} [:bar {} [:baz { :id "goo" }]]]]
+    (is (= (list [:baz { :id "goo" }])
+           (expr (make-context tree))))))
+
+(deftest match-ancestor-match-class
+  (let [expr (match-ancestor (match-element-type "foo") (match-class "goo"))
+        tree [:foo {} [:bar { :class "goo" }]]
+        context (make-context tree)]
+
+    (is (= '([:bar { :class "goo" }]) (expr context)))))
+
+
+(deftest match-ancestor-multiple-matches
+  (let [expr (match-ancestor (match-element-type "foo") (match-class "goo"))
+        tree [:foo {}
+              [:bar { :class "goo" }
+               [:baz { :class "goo ball" }]
+               [:qux {}]
+               [:fizz { :class "boy-named-goo" }]]]
+        context (make-context tree)
+        result (expr context)
+        result-tags (map first result)]
+
+    (is (= '(:bar :baz) result-tags))))
