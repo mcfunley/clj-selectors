@@ -212,29 +212,17 @@
 
 
 ;; =============================================================================
-;; MatchContext
+;; element tree navigation
 
-(defrecord MatchContext [tag attributes children root parent])
+(defn tag [elem] (first elem))
 
-(defn make-context
-  ([[tag attributes & children]]
-   (MatchContext. tag attributes children nil nil))
+(defn attributes [elem] (second elem))
 
-  ([[tag attributes & children] root parent]
-   (MatchContext. tag attributes children root parent)))
+(defn children [elem] (drop 2 elem))
 
-(defn element [context]
-  (vec (concat ((juxt :tag :attributes) context) (:children context))))
+(defn element-seq [elem] (tree-seq identity children elem))
 
-(defn root [context] (or (:root context) context))
-
-(defn children
-  [context]
-  (map #(make-context %1 (root context) context) (:children context)))
-
-(defn context-seq [context] (tree-seq identity children context))
-
-(defn descendant-seq [context] (rest (context-seq context)))
+(defn descendant-seq [elem] (rest (element-seq elem)))
 
 
 ;; =============================================================================
@@ -242,61 +230,65 @@
 
 (defn- evaluate-matcher-predicate
   [predicate]
-  (fn [context]
-    (if (predicate context)
-      (list (element context))
+  (fn [elem]
+    (if (predicate elem)
+      (list elem)
       nil)))
 
 (defmacro defmatcher
   [name arglist predicate]
   `(defn ~name ~arglist (evaluate-matcher-predicate ~predicate)))
-    
+
+(defn coalesce-matches
+  [match-result-list]
+  (reduce concat (filter identity match-result-list)))
+
 
 (defmatcher match-element-type
   [name]
   (let [tag-key (keyword name)]
-    (fn [context] (= (:tag context) tag-key))))
+    (fn [elem] (= (tag elem) tag-key))))
 
 (defmatcher match-id
   [name]
-  (fn [context] (= (-> context :attributes :id) name)))
+  (fn [elem] (= (-> elem attributes :id) name)))
 
 (defmatcher match-class
   [name]
-  (fn [context]
-    (let [class-attr (-> context :attributes :class)]
+  (fn [elem]
+    (let [class-attr (-> elem attributes :class)]
       (when class-attr
         (some #(= name %) (clojure.string/split class-attr #"\s+"))))))
 
 (defn match-all
   [& matchers]
-  (fn [context]
-    (let [results (map #(%1 context) matchers)]
+  (fn [elem]
+    (let [results (map #(%1 elem) matchers)]
       (when (every? identity results)
         (last results)))))
 
 
 (defn match-descendants
-  [descendant-matcher context]
-  (let [matches (map #(descendant-matcher %1) (descendant-seq context))]
+  [descendant-matcher elem]
+  (let [matches (map #(descendant-matcher %1) (descendant-seq elem))]
     (map first (filter some? matches))))
 
 (defn match-ancestor
   [ancestor-matcher descendant-matcher]
-  (fn [context]
-    (and (ancestor-matcher context)
-         (match-descendants descendant-matcher context))))
+  (fn [elem]
+    (and (ancestor-matcher elem)
+         (match-descendants descendant-matcher elem))))
 
 (defn match-with-child
   [parent-matcher child-matcher]
-  (fn [context]
-    (prn (map child-matcher (children context)))
-    (and (parent-matcher context)
-         (coalesce-matches (map child-matcher (children context))))))
+  (fn [elem]
+    (and (parent-matcher elem)
+         (coalesce-matches (map child-matcher (children elem))))))
 
-(defn coalesce-matches
-  [match-result-list]
-  (reduce concat (filter identity match-result-list)))
+;; (defn match-preceding
+;;   [left-match right-match]
+;;   (fn [context]
+    
 
 
 ;; =============================================================================
@@ -315,8 +307,7 @@
 
 (defn $
   [selector tree]
-  (let [s (if (selector? selector) selector (compile-selector selector))
-        root-context (make-context tree)
-        raw-matches (map s (context-seq root-context))]
-    (coalesce-matches raw-matches)))
+  (let [s (if (selector? selector) selector (compile-selector selector))]
+    (coalesce-matches (map s (element-seq tree)))))
+
 

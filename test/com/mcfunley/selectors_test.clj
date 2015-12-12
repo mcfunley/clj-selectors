@@ -6,7 +6,6 @@
 (alias 'selectors 'com.mcfunley.selectors)
 (alias 'ts 'pl.danieljanus.tagsoup)
 (import 'com.mcfunley.selectors.Selector)
-(import 'com.mcfunley.selectors.MatchContext)
 
 
 ;; ==============================================================================
@@ -393,43 +392,36 @@
 
 
 ;; ==============================================================================
-;; MatchContext
-
-(deftest element-works
-  (let [el [:foo {}]
-        c (make-context el)]
-    (is (= (element c) el))))
+;; navigation
 
 (deftest children-works
   (let [cs [[:bar {}] [:baz {}]]
-        el (make-context (vec `(:foo {} ~@cs)))]
-    (is (= (children el) (map #(make-context %1 el el) cs)))))
+        el (vec `(:foo {} ~@cs))]
+    (is (= (children el) cs))))
 
 (deftest no-children
-  (let [el (make-context [:foo {}])]
-    (is (empty? (children el)))))
-
+  (is (empty? (children [:foo {}]))))
 
 (deftest descendant-seq-works
   (let [tree [:foo {} [:bar {}] [:baz {} [:goo {}]]]]
     (is (= '(:bar :baz :goo)
-           (map :tag (descendant-seq (make-context tree)))))))
+           (map tag (descendant-seq tree))))))
 
 (deftest descendant-seq-no-children
-  (is (empty? (descendant-seq (make-context [:foo {}])))))
+  (is (empty? (descendant-seq [:foo {}]))))
 
-(deftest context-seq-works
+(deftest element-seq-works
   (let [tree [:a {} [:b {}] [:c {} [:d {}]]]]
-    (is (= '(:a :b :c :d) (map :tag (context-seq (make-context tree)))))))
+    (is (= '(:a :b :c :d) (map tag (element-seq tree))))))
 
-(deftest context-seq-multiple-branches
+(deftest element-seq-multiple-branches
   (let [tree [:a {}
               [:b {}]
               [:c {} [:d {}]]
               [:e {} [:f {}
                       [:g {}]]]]]
     (is (= '(:a :b :c :d :e :f :g)
-           (map :tag (context-seq (make-context tree)))))))
+           (map tag (element-seq tree))))))
 
 
 
@@ -444,78 +436,78 @@
 ;; matchers
 
 (deftest match-element-type-works
-  (is ((match-element-type "foo") (make-context [:foo {}]))))
+  (is ((match-element-type "foo") [:foo {}])))
 
 (deftest match-element-type-miss
-  (is (not ((match-element-type "foo") (make-context [:bar {}])))))
+  (is (not ((match-element-type "foo") [:bar {}]))))
 
 (deftest match-element-type-returns-element
   (let [element [:foo {}]]
-    (is (= ((match-element-type "foo") (make-context element))
+    (is (= ((match-element-type "foo") element)
            (list element)))))
 
 (deftest match-id-works
-  (is ((match-id "bar") (make-context [:foo { :id "bar" }]))))
+  (is ((match-id "bar") [:foo { :id "bar" }])))
 
 (deftest match-id-miss
-  (is (not ((match-id "baz") (make-context [:foo { :id "bar" }])))))
+  (is (not ((match-id "baz") [:foo { :id "bar" }]))))
 
 (deftest match-id-returns-element
   (let [element [:foo { :id "bar" }]]
-    (is (= ((match-id "bar") (make-context element)) (list element)))))
+    (is (= ((match-id "bar") element) (list element)))))
 
 (deftest match-id-no-id-attribute
-  (is (not ((match-id "baz") (make-context [:foo {}])))))
+  (is (not ((match-id "baz") [:foo {}]))))
 
 (deftest match-all-works
   (is (let [expr (match-all
                   (match-element-type "foo")
                   (match-id "bar"))]
-        (expr (make-context [:foo { :id "bar" }])))))
+        (expr [:foo { :id "bar" }]))))
 
 (deftest match-all-fail
   (is (not (let [expr (match-all
                        (match-element-type "foo")
                        (match-id "bar"))]
-             (expr (make-context [:foo { :id "baz" }]))))))
+             (expr [:foo { :id "baz" }])))))
 
 (deftest match-class-works-one-class
-  (is ((match-class "foo") (make-context [:div { :class "foo" }]))))
+  (is ((match-class "foo") [:div { :class "foo" }])))
 
 (deftest match-class-miss
-  (is (not ((match-class "foo") (make-context [:div { :class "bar" }])))))
+  (is (not ((match-class "foo") [:div { :class "bar" }]))))
 
 (deftest match-class-many-classes
-  (is ((match-class "foo") (make-context [:div { :class "bar foo" }]))))
+  (is ((match-class "foo") [:div { :class "bar foo" }])))
 
 (deftest match-class-whitespace-significant
-  (is (not ((match-class "foo") (make-context [:div { :class "bar foobar" }])))))
+  (is (not ((match-class "foo") [:div { :class "bar foobar" }]))))
 
 (deftest match-class-no-class-attr
-  (is (not ((match-class "foo") (make-context [:div {}])))))
+  (is (not ((match-class "foo") [:div {}]))))
 
 (deftest match-class-case-sensitive
-  (is (not ((match-class "foo") (make-context [:div { :class "Foo" }])))))
+  (is (not ((match-class "foo") [:div { :class "Foo" }]))))
 
 (deftest match-class-returns-element
   (let [element [:div { :class "foo bar baz" }]]
-    (is (= ((match-class "bar") (make-context element)) (list element)))))
+    (is (= ((match-class "bar") element) (list element)))))
 
 
 (deftest match-descendants-one-level
   (let [element [:a {} [:b { :id "x" }]]]
     (is (= '([:b { :id "x" }])
-           (match-descendants (match-id "x") (make-context element))))))
+           (match-descendants (match-id "x") element)))))
 
 (deftest match-descendants-multiple
   (let [element [:a {} [:b { :id "x" }] [:c { :id "x" }]]]
     (is (= '([:b { :id "x" }] [:c { :id "x" }])
-           (match-descendants (match-id "x") (make-context element))))))
+           (match-descendants (match-id "x") element)))))
 
 (deftest match-descendants-two-levels
   (let [element [:a {} [:b { :id "x" } [:c { :id "x" }]]]]
     (is (= '([:b { :id "x" } [ :c { :id "x" }]] [:c { :id "x" }])
-           (match-descendants (match-id "x") (make-context element))))))
+           (match-descendants (match-id "x") element)))))
 
 (deftest match-descendants-many-levels-multiple-branches
   (let [element [:a {}
@@ -524,23 +516,21 @@
                  [:d {}
                   [:e {}
                    [:f {:id "x"}] [:g {:id "x"}]]]]
-        matches (match-descendants (match-id "x") (make-context element))]
+        matches (match-descendants (match-id "x") element)]
     
-    (is (= '(:b :c :f :g)
-           (map first matches)))))
+    (is (= '(:b :c :f :g) (map tag matches)))))
 
 (deftest match-ancestor-works
   (let [expr (match-ancestor (match-element-type "foo") (match-id "goo"))
         tree [:foo {} [:bar {} [:baz { :id "goo" }]]]]
     (is (= (list [:baz { :id "goo" }])
-           (expr (make-context tree))))))
+           (expr tree)))))
 
 (deftest match-ancestor-match-class
   (let [expr (match-ancestor (match-element-type "foo") (match-class "goo"))
-        tree [:foo {} [:bar { :class "goo" }]]
-        context (make-context tree)]
+        tree [:foo {} [:bar { :class "goo" }]]]
 
-    (is (= '([:bar { :class "goo" }]) (expr context)))))
+    (is (= '([:bar { :class "goo" }]) (expr tree)))))
 
 (deftest match-ancestor-multiple-matches
   (let [expr (match-ancestor (match-element-type "foo") (match-class "goo"))
@@ -549,8 +539,7 @@
                [:baz { :class "goo ball" }]
                [:qux {}]
                [:fizz { :class "boy-named-goo" }]]]
-        context (make-context tree)
-        result (expr context)
+        result (expr tree)
         result-tags (map first result)]
 
     (is (= '(:bar :baz) result-tags))))
@@ -561,9 +550,8 @@
                [:c {:class "x y"}]]
               [:d {}
                [:e {:class "y x z"}]]]
-        context (make-context tree)
         expr (match-ancestor (match-element-type "a") (match-class "x"))
-        result (expr context)]
+        result (expr tree)]
     (is (= '(:b :c :e) (map first result)))))
 
 
