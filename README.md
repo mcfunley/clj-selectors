@@ -1,6 +1,6 @@
 # clj-selectors
 
-A Clojure implementation of CSS selectors. These can be used to match element trees produced by [clj-tagsoup](https://github.com/nathell/clj-tagsoup).
+A Clojure implementation of [CSS Selectors](http://www.w3.org/TR/css3-selectors/). These can be used to match element trees produced by [clj-tagsoup](https://github.com/nathell/clj-tagsoup).
 
 ## Usage
 
