@@ -22,6 +22,6 @@ Selectors can also be precompiled for later use:
 
 ## License
 
-Copyright © 2015 Dan McKinley
+Copyright © 2015 [Dan McKinley](http://www.mcfunley.com")
 
 Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
