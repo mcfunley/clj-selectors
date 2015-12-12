@@ -111,7 +111,7 @@
           op `(~matcher ~a ~b)]
       (if (empty? r)
         op
-        `(match-all ~(collect-expressions op r)))))
+        `(match-all ~@(collect-expressions op r)))))
        
   (match (vec tokens)
     []             nil
@@ -124,7 +124,7 @@
     [a "=" b & r]  (binop 'match-attribute-value a b r)
     
     [a & r]        `(match-all
-                     ~(collect-expressions `(match-attribute-exists ~a) r))))
+                     ~@(collect-expressions `(match-attribute-exists ~a) r))))
                      
 
 
@@ -157,7 +157,7 @@
     #"^::.*"          (parse-pseudo-element token)
     #"^:[^:].*"       (parse-pseudo-class token)
     #"^[^\[:.#]+"     `(match-element-type ~token)
-    :else             `(match-all ~(map parse-token (tokenize-element token)))))
+    :else             `(match-all ~@(map parse-token (tokenize-element token)))))
 
 
 (defn consume-tokens
@@ -189,32 +189,25 @@
 ;; =============================================================================
 ;; simplifying
 
-(defn match-all? [x] (= (first x) `match-all))
+(defn match-all? [x] (and (sequential? x) (= (first x) `match-all)))
 
 
 (defn flatten-match-all
-  [match-all-expression]
-  (cons `match-all
-        (list 
-         (filter (complement match-all?)
-                 (tree-seq match-all? second match-all-expression)))))
-   
+  [expr]
+  (if (match-all? expr)
+    (cons `match-all
+          (filter (complement match-all?) (tree-seq match-all? rest expr)))
+    
+    expr))
+
 (defn simplify
-  [expr-tree]
-
-  (defn simplify-expressions
-    [argument-list]
-    (map (fn [a] (if (sequential? a) (simplify a) a)) argument-list))
-
-  (match (vec expr-tree)
-    ;; if we're at a match-all, flatten any children that are match-all into
-    ;; the list and recurse down.
-    [`match-all _]   (flatten-match-all expr-tree)
-
-    ;; recurse down if its an expression
-    [f & arguments]  `(~f ~@(simplify-expressions arguments))
-
-    :else            expr-tree))
+  [expr]
+  (if (sequential? expr)
+    (let [flattened-expr (flatten-match-all expr)
+          f (first flattened-expr)
+          args (rest flattened-expr)]
+      `(~f ~@(map simplify args)))
+    expr))
 
 
 
@@ -239,9 +232,9 @@
   [context]
   (map #(make-context %1 (root context) context) (:children context)))
 
-(defn descendant-seq
-  [context]
-  (rest (tree-seq identity children context)))
+(defn context-seq [context] (tree-seq identity children context))
+
+(defn descendant-seq [context] (rest (context-seq context)))
 
 
 ;; =============================================================================
@@ -275,9 +268,12 @@
       (when class-attr
         (some #(= name %) (clojure.string/split class-attr #"\s+"))))))
 
-(defmatcher match-all
-  [matchers]
-  (fn [context] (every? identity (map #(%1 context) matchers))))
+(defn match-all
+  [& matchers]
+  (fn [context]
+    (let [results (map #(%1 context) matchers)]
+      (when (every? identity results)
+        (last results)))))
 
 
 (defn match-descendants
@@ -291,18 +287,15 @@
     (and (ancestor-matcher context)
          (match-descendants descendant-matcher context))))
 
-
-
-;; (defn match-element
-;;   [root parent elem matcher]
-;;   (let [[tag attributes children] elem]
-;;     (filter some? (cons (matcher root parent elem)
-;;                         (map #(match-element root elem %1 matcher) children)))))
+(defn match-with-child
+  [ancestor-matcher child-matcher]
+  (fn [context]
+    ; todo
+    nil))
 
 
 ;; =============================================================================
 ;; public interface
-
 
 (defrecord Selector [source expression match]
   clojure.lang.IFn
@@ -313,13 +306,14 @@
 (defn compile-selector
   [source]
   (let [expression (parse-selector source)]
-    (Selector. source expression nil)))
+    (Selector. source expression (eval expression))))
 
 (defn $
   [selector tree]
   (let [s (if (selector? selector) selector (compile-selector selector))
-        root-context (make-context tree)]
-    :todo))
-    
+        root-context (make-context tree)
+        raw (map s (context-seq root-context))]
+    (reduce concat (filter identity raw))))
+
 
 

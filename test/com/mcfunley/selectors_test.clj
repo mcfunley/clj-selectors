@@ -58,114 +58,114 @@
 
 (deftest parse-type-and-id
   (is (= `(selectors/match-all
-           ((selectors/match-element-type "foo")
-            (selectors/match-id "bar")))
+           (selectors/match-element-type "foo")
+           (selectors/match-id "bar"))
          (parse-selector "foo#bar"))))
 
 (deftest parse-type-id-and-class
   (is (= `(selectors/match-all
-           ((selectors/match-element-type "foo")
-            (selectors/match-id "bar")
-            (selectors/match-class "baz")))
+           (selectors/match-element-type "foo")
+           (selectors/match-id "bar")
+           (selectors/match-class "baz"))
          (parse-selector "foo#bar.baz"))))
 
 (deftest parse-any-with-class
   (is (= `(selectors/match-all
-           ((selectors/match-element-type :any)
-            (selectors/match-class "foo")))
+           (selectors/match-element-type :any)
+           (selectors/match-class "foo"))
          (parse-selector "*.foo"))))
 
 (deftest parse-first-line
   (is (= `(selectors/match-all
-           ((selectors/match-element-type "foo")
-            (selectors/select-first-line))))
+           (selectors/match-element-type "foo")
+           (selectors/select-first-line)))
       (parse-selector "foo::first-line")))
 
 (deftest parse-first-letter
   (is (= `(selectors/match-all
-           ((selectors/match-element-type "foo")
-            (selectors/match-class "bar")
-            (selectors/select-first-letter))))
+           (selectors/match-element-type "foo")
+           (selectors/match-class "bar")
+           (selectors/select-first-letter)))
       (parse-selector "foo.bar::first-letter")))
 
 
 (deftest parse-having-attribute
   (is (= `(selectors/match-all
-           ((selectors/match-element-type "foo")
-            (selectors/match-attribute-exists "bar")))
+           (selectors/match-element-type "foo")
+           (selectors/match-attribute-exists "bar"))
          (parse-selector "foo[bar]"))))
 
 (deftest parse-having-two-attributes
   (is (= `(selectors/match-all
-           ((selectors/match-element-type "foo")
-            (selectors/match-attribute-exists "bar")
-            (selectors/match-attribute-exists "baz")))
+           (selectors/match-element-type "foo")
+           (selectors/match-attribute-exists "bar")
+           (selectors/match-attribute-exists "baz"))
          (parse-selector "foo[bar baz]"))))
 
 (deftest parse-attribute-contains-word
   (is (= `(selectors/match-all
-           ((selectors/match-element-type "foo")
-            (selectors/match-attribute-value-contains-word "bar" "baz")))
+           (selectors/match-element-type "foo")
+           (selectors/match-attribute-value-contains-word "bar" "baz"))
          (parse-selector "foo[bar ~= \"baz\"]"))))
 
 (deftest parse-attribute-value-begins
   (is (= `(selectors/match-all
-           ((selectors/match-element-type "foo")
-            (selectors/match-class "bar")
-            (selectors/match-attribute-value-begins "baz" "fizz buzz")))
+           (selectors/match-element-type "foo")
+           (selectors/match-class "bar")
+           (selectors/match-attribute-value-begins "baz" "fizz buzz"))
          (parse-selector "foo.bar[baz^=\"fizz buzz\"]"))))
 
 (deftest parse-attribute-value-ends
   (is (= `(selectors/match-all
-           ((selectors/match-element-type :any)
-            (selectors/match-attribute-value-ends "foo" "bar")))
+           (selectors/match-element-type :any)
+           (selectors/match-attribute-value-ends "foo" "bar"))
          (parse-selector "*[foo $= \"bar\"]"))))
 
 (deftest parse-attribute-value-contains-pattern
   (is (= `(selectors/match-all
-           ((selectors/match-element-type :any)
-            (selectors/match-id "crap")
-            (selectors/match-attribute-value-contains-pattern "foo" "bar")))
+           (selectors/match-element-type :any)
+           (selectors/match-id "crap")
+           (selectors/match-attribute-value-contains-pattern "foo" "bar"))
          (parse-selector "*#crap[foo *=   \"bar\"]"))))
 
 (deftest parse-wacky-attribute-value
   (is (= `(selectors/match-all
-           ((selectors/match-class "foo")
-            (selectors/match-attribute-exists "bar")
-            (selectors/match-attribute-value-lang-subcode "baz" "en")
-            (selectors/match-attribute-exists "goo")))
+           (selectors/match-class "foo")
+           (selectors/match-attribute-exists "bar")
+           (selectors/match-attribute-value-lang-subcode "baz" "en")
+           (selectors/match-attribute-exists "goo"))
          (parse-selector ".foo[bar baz|=\"en\" goo  ]"))))
 
 (deftest parse-match-attribute-value
   (is (= `(selectors/match-all
-           ((selectors/match-id "foo")
-            (selectors/match-attribute-exists "bar")
-            (selectors/match-attribute-value "baz" "goo ball")
-            (selectors/match-attribute-value-contains-pattern "qux" "quick")))
+           (selectors/match-id "foo")
+           (selectors/match-attribute-exists "bar")
+           (selectors/match-attribute-value "baz" "goo ball")
+           (selectors/match-attribute-value-contains-pattern "qux" "quick"))
          (parse-selector "#foo[bar baz=\"goo ball\" qux *= \"quick\"]"))))
 
 (deftest parse-complicated-first-line
   (is (= `(selectors/match-ancestor
            (selectors/match-all
-            ((selectors/match-id "foo")
-             (selectors/match-attribute-value "bar" "baz")))
+            (selectors/match-id "foo")
+            (selectors/match-attribute-value "bar" "baz"))
            (selectors/match-all
-            ((selectors/match-class "qux")
-             (selectors/select-first-line))))
+            (selectors/match-class "qux")
+            (selectors/select-first-line)))
          (parse-selector "#foo[bar=\"baz\"] .qux::first-line"))))
 
 (deftest parse-first-line
   (is (= `(selectors/match-all
-           ((selectors/match-class "foo")
-            (selectors/select-first-line)))
+           (selectors/match-class "foo")
+           (selectors/select-first-line))
          (parse-selector ".foo::first-line"))))
 
 (deftest parse-first-letter
   (is (= `(selectors/match-with-child
            (selectors/match-element-type "foo")
            (selectors/match-all
-            ((selectors/match-id "bar")
-             (selectors/select-first-letter))))
+            (selectors/match-id "bar")
+            (selectors/select-first-letter)))
          (parse-selector "foo > #bar::first-letter"))))
 
 ;; ==============================================================================
@@ -271,63 +271,63 @@
 
 (deftest parse-attribute-selector-match-all-nesting
   (is (= `(selectors/match-all
-           ((selectors/match-attribute-exists "foo")
-            (selectors/match-all
-             ((selectors/match-attribute-exists "bar")))))
+           (selectors/match-attribute-exists "foo")
+           (selectors/match-all
+            (selectors/match-attribute-exists "bar")))
          (parse-attribute-selector "[foo bar]"))))
 
 (deftest parse-wacky-attribute-selector
   (is (= `(selectors/match-all
-           ((selectors/match-attribute-exists "bar")
+           (selectors/match-attribute-exists "bar")
+           (selectors/match-all
+            (selectors/match-attribute-value-lang-subcode "baz" "en")
             (selectors/match-all
-             ((selectors/match-attribute-value-lang-subcode "baz" "en")
-              (selectors/match-all
-               ((selectors/match-attribute-exists "goo"))))))
-         (parse-attribute-selector "[bar baz|=\"en\" goo  ]")))))
+             (selectors/match-attribute-exists "goo"))))
+         (parse-attribute-selector "[bar baz|=\"en\" goo  ]"))))
 
 
 ;; ==============================================================================
 ;; simplification
 
 (deftest flatten-match-all-nop
-  (is (= '(com.mcfunley.selectors/match-all ((foo bar)))
+  (is (= '(com.mcfunley.selectors/match-all (foo bar))
          (flatten-match-all
-          '(com.mcfunley.selectors/match-all ((foo bar)))
-          ))))
+          '(com.mcfunley.selectors/match-all (foo bar)))
+          )))
 
 (deftest flatten-match-all-one-level
   (is (= '(com.mcfunley.selectors/match-all
-           ((foo bar)
-            (baz goo)
-            (fizz buzz)
-            (qux quick)))
+           (foo bar)
+           (baz goo)
+           (fizz buzz)
+           (qux quick))
 
          (flatten-match-all
           '(com.mcfunley.selectors/match-all
-            ((foo bar)
-             (com.mcfunley.selectors/match-all
-              ((baz goo)
-               (fizz buzz)))
+            (foo bar)
+            (com.mcfunley.selectors/match-all
+             (baz goo)
+             (fizz buzz)
              (qux quick)))))))
 
 (deftest flatten-match-all-two-levels
   (is (= '(com.mcfunley.selectors/match-all
-           ((foo bar)
-            (baz goo)
-            (fizz buzz)
-            (qux quick)
-            (quack quack)))
+           (foo bar)
+           (baz goo)
+           (fizz buzz)
+           (qux quick)
+           (quack quack))
 
          (flatten-match-all
           '(com.mcfunley.selectors/match-all
-            ((foo bar)
+            (foo bar)
              
-             (com.mcfunley.selectors/match-all
-              ((com.mcfunley.selectors/match-all ((baz goo)))
-               (com.mcfunley.selectors/match-all ((fizz buzz)))
-               (qux quick)))
+            (com.mcfunley.selectors/match-all
+             (com.mcfunley.selectors/match-all (baz goo))
+             (com.mcfunley.selectors/match-all (fizz buzz))
+             (qux quick))
 
-             (com.mcfunley.selectors/match-all ((quack quack)))))))))
+            (com.mcfunley.selectors/match-all (quack quack)))))))
 
 
 (deftest simplify-simple
@@ -336,24 +336,24 @@
 
 (deftest simplify-match-all
   (is (= '(com.mcfunley.selectors/match-all
-           ((foo bar)
-            (baz goo)))
+           (foo bar)
+           (baz goo))
 
          (simplify
           '(com.mcfunley.selectors/match-all
-            ((foo bar)
-             (com.mcfunley.selectors/match-all ((baz goo)))))))))
+            (foo bar)
+            (com.mcfunley.selectors/match-all (baz goo)))))))
 
 (deftest simplify-buried-match-alls
   (is (= '(foo
-           (bar (com.mcfunley.selectors/match-all ((baz goo) (fizz buzz))))
+           (bar (com.mcfunley.selectors/match-all (baz goo) (fizz buzz)))
            (bar (quack quack)))
 
          (simplify
           '(foo
             (bar (com.mcfunley.selectors/match-all
-                  ((com.mcfunley.selectors/match-all ((baz goo)))
-                   (fizz buzz))))
+                  (com.mcfunley.selectors/match-all (baz goo))
+                  (fizz buzz)))
             (bar (quack quack)))))))
 
 (deftest simplify-single-select
@@ -373,6 +373,12 @@
            (selectors/match-element-type "foo")
            (selectors/match-element-type "bar"))
          (:expression (compile-selector "foo > bar")))))
+
+(deftest compile-type-and-class
+  (is (= `(selectors/match-all
+           (selectors/match-element-type "foo")
+           (selectors/match-class "bar"))
+         (:expression (compile-selector "foo.bar")))))
 
 
 ;; ==============================================================================
@@ -411,15 +417,27 @@
 
 (deftest descendant-seq-no-children
   (is (empty? (descendant-seq (make-context [:foo {}])))))
-    
+
+(deftest context-seq-works
+  (let [tree [:a {} [:b {}] [:c {} [:d {}]]]]
+    (is (= '(:a :b :c :d) (map :tag (context-seq (make-context tree)))))))
+
+(deftest context-seq-multiple-branches
+  (let [tree [:a {}
+              [:b {}]
+              [:c {} [:d {}]]
+              [:e {} [:f {}
+                      [:g {}]]]]]
+    (is (= '(:a :b :c :d :e :f :g)
+           (map :tag (context-seq (make-context tree)))))))
+
 
 
 ;; ==============================================================================
 ;; Selector
 
 (deftest selector-invocation
-  (is (= '(:foo)
-         ((Selector. "" nil #(list %1)) :foo))))
+  (is (= '(:foo) ((Selector. "" nil #(list %1)) :foo))))
 
 
 ;; ==============================================================================
@@ -451,14 +469,14 @@
 
 (deftest match-all-works
   (is (let [expr (match-all
-                  (list (match-element-type "foo")
-                        (match-id "bar")))]
+                  (match-element-type "foo")
+                  (match-id "bar"))]
         (expr (make-context [:foo { :id "bar" }])))))
 
 (deftest match-all-fail
   (is (not (let [expr (match-all
-                       (list (match-element-type "foo")
-                             (match-id "bar")))]
+                       (match-element-type "foo")
+                       (match-id "bar"))]
              (expr (make-context [:foo { :id "baz" }]))))))
 
 (deftest match-class-works-one-class
@@ -524,7 +542,6 @@
 
     (is (= '([:bar { :class "goo" }]) (expr context)))))
 
-
 (deftest match-ancestor-multiple-matches
   (let [expr (match-ancestor (match-element-type "foo") (match-class "goo"))
         tree [:foo {}
@@ -537,3 +554,54 @@
         result-tags (map first result)]
 
     (is (= '(:bar :baz) result-tags))))
+
+(deftest match-ancestor-multiple-branches
+  (let [tree [:a {}
+              [:b {:class "x"}
+               [:c {:class "x y"}]]
+              [:d {}
+               [:e {:class "y x z"}]]]
+        context (make-context tree)
+        expr (match-ancestor (match-element-type "a") (match-class "x"))
+        result (expr context)]
+    (is (= '(:b :c :e) (map first result)))))
+
+
+;; ==============================================================================
+;; invoking selectors
+
+(deftest invoke-match-all-type-and-class-miss
+  (let [s (compile-selector "a.b")]
+    (is (= nil (s [:a {} [:b {:class "x"}]])))))
+  
+
+;; ==============================================================================
+;; $
+
+(deftest $-works
+  (let [tree [:a {} [:b { :id "foo" }]]]
+    (is (= '([:b { :id "foo" }])
+           ($ "#foo" tree)))))
+
+(deftest $-multiple-results
+  (let [tree [:a {}
+              [:b {:class "x"}
+               [:c {:class "x y"}]]
+              [:d {}
+               [:e {:class "y x z"}]]]
+
+        result ($ ".x" tree)]
+    (is (= '(:b :c :e) (map first result)))))
+
+(deftest $-ancestor-multiple-results
+  (let [tree [:a {}
+              [:b {:class "x"}
+               [:c {:class "x y"}]]
+              [:d {}
+               [:e {:class "y x z"}]
+               [:b {:class "a b x"}]]]
+        result ($ "a b.x" tree)]
+    (is (= '([:b {:class "x"} [:c {:class "x y"}]]
+             [:b {:class "a b x"}])
+           result))))
+
