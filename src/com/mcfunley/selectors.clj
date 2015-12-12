@@ -218,7 +218,7 @@
 
 (defn attributes [elem] (second elem))
 
-(defn children [elem] (drop 2 elem))
+(defn children [elem] (filter sequential? (drop 2 elem)))
 
 (defn element-seq [elem] (tree-seq identity children elem))
 

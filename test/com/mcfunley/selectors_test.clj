@@ -399,6 +399,10 @@
         el (vec `(:foo {} ~@cs))]
     (is (= (children el) cs))))
 
+(deftest children-element-has-text-nodes
+  (is (= '(:a :b)
+         (map tag (children [:x {} [:a {}] "foo" [:b {}] "bar"])))))
+
 (deftest no-children
   (is (empty? (children [:foo {}]))))
 
