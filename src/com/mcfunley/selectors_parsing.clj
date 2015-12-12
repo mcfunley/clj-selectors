@@ -1,3 +1,7 @@
+;; The functions in this file accept sequences of tokens and yield match
+;; expression trees.
+;;
+
 (import java.lang.UnsupportedOperationException)
 
 (defn unsupported

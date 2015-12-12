@@ -1,3 +1,6 @@
+;; Functions for breaking up strings of text in various parts of selector
+;; expressions into sequences of digestible tokens.
+;; 
 
 
 (defn group-extract
@@ -53,6 +56,8 @@
 
 
 (defn tokenize-attribute-selector
+  "Tokenizes an attribute selector (e.g. the expression found within brackets in 
+  `foo.bar[baz=\"goo\"]`)."
   [sel]
 
   (defn split-words

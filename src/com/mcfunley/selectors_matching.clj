@@ -1,3 +1,15 @@
+;; Functions in this file implement element tree matching.
+;;
+;; The selector compiler yields an expression tree like:
+;;
+;;    '(match-foo (match-bar "arg") (match-baz 123))
+;;
+;; This is eval'd to yield a compiled selection function. So generally speaking,
+;; every `match-` function takes a set of arguments and returns a function that
+;; accepts an element tree and returns a list of matching elements.
+;; 
+  
+
 (defn- evaluate-matcher-predicate
   [predicate]
   (fn [elem]
