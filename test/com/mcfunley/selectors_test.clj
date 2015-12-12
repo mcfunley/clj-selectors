@@ -573,6 +573,14 @@
 (deftest invoke-match-all-type-and-class-miss
   (let [s (compile-selector "a.b")]
     (is (= nil (s [:a {} [:b {:class "x"}]])))))
+
+
+;; ==============================================================================
+;; coalesce-matches
+
+(deftest coalesce-matches-works
+  (is (= '([:a {}] [:b {}] [:c {}])
+         (coalesce-matches '(nil ([:a {}]) ([:b {}] [:c {}]) nil nil)))))
   
 
 ;; ==============================================================================
@@ -604,4 +612,13 @@
     (is (= '([:b {:class "x"} [:c {:class "x y"}]]
              [:b {:class "a b x"}])
            result))))
+
+(deftest $-child-match
+  (let [tree [:a {} [:b {:class "foo"}] [:c {}]]]
+    (is (= '([:b {:class "foo"}])
+           ($ "a > .foo" tree)))))
+
+(deftest $-child-no-match
+  (let [tree [:a {} [:b {:class "foo"}] [:c {}]]]
+    (is (empty? ($ "a > .bleh" tree)))))
 

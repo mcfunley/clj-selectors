@@ -288,10 +288,15 @@
          (match-descendants descendant-matcher context))))
 
 (defn match-with-child
-  [ancestor-matcher child-matcher]
+  [parent-matcher child-matcher]
   (fn [context]
-    ; todo
-    nil))
+    (prn (map child-matcher (children context)))
+    (and (parent-matcher context)
+         (coalesce-matches (map child-matcher (children context))))))
+
+(defn coalesce-matches
+  [match-result-list]
+  (reduce concat (filter identity match-result-list)))
 
 
 ;; =============================================================================
@@ -312,8 +317,6 @@
   [selector tree]
   (let [s (if (selector? selector) selector (compile-selector selector))
         root-context (make-context tree)
-        raw (map s (context-seq root-context))]
-    (reduce concat (filter identity raw))))
-
-
+        raw-matches (map s (context-seq root-context))]
+    (coalesce-matches raw-matches)))
 
