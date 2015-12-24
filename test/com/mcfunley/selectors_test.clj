@@ -680,3 +680,28 @@
     (is (= '([:b {:x "x" :y ""}] [:c {:y "1"}])
            ($ "*[y]" tree)))))
 
+(deftest $-match-several-attributes-exist
+  (let [tree [:a {} [:b {:x "x" :y ""}] [:c {:y "1"}]]]
+    (is (= '([:b {:x "x" :y ""}])
+           ($ "*[x y]" tree)))))
+
+
+(deftest $-match-attribute-value
+  (let [tree [:a {} [:b {:x "x" :y ""}] [:c {:y "1"}]]]
+    (is (= '([:c {:y "1"}])
+           ($ "[y=\"1\"]" tree)))))
+
+(deftest $-match-attribute-value-multiple
+  (let [tree [:a {:y "1"} [:b {:x "x" :y ""}] [:c {:y "1"}]]]
+    (is (= (concat (list tree) '([:c {:y "1"}]))
+           ($ "[y=\"1\"]" tree)))))
+
+(deftest $-match-attribute-value-miss
+  (let [tree [:a {} [:b {:x "x" :y ""}] [:c {:y "1"}]]]
+    (is (empty? ($ "[z=\"1\"]" tree)))))
+
+(deftest $-match-attribute-value-value-miss
+  (let [tree [:a {} [:b {:x "x" :y ""}] [:c {:y "1"}]]]
+    (is (empty? ($ "[x=\"1\"]" tree)))))
+
+

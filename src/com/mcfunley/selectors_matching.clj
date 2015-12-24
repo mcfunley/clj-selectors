@@ -111,6 +111,14 @@
   (build-set-matcher match-in-set))
 
 
+(defn- attr-filter
+  [f elems]
+  (filter #(f (attributes %)) elems))
+
 (defn match-attribute-exists
   [name]
-  (fn [elems] (filter #((keyword name) (attributes %)) elems)))
+  (fn [elems] (attr-filter (keyword name) elems)))
+
+(defn match-attribute-value
+  [name value]
+  (fn [elems] (attr-filter #(= ((keyword name) %) value) elems)))
