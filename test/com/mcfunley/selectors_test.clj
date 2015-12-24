@@ -664,3 +664,19 @@
                [:c {}] [:d {:class "foo"}] [:e {} ] [:f {:class "foo"}]]]]
     (is (= '([:d {:class "foo"}])
            ($ "b.foo > c + .foo" tree)))))
+
+
+(deftest $-match-attribute-exists
+  (let [tree [:a {} [:b {:x "x" :y ""}] [:c {}]]]
+    (is (= '([:b {:x "x" :y ""}])
+           ($ "b[x]" tree)))))
+
+(deftest $-match-attribute-exists-miss
+  (let [tree [:a {} [:b {:x "x" :y ""}] [:c {}]]]
+    (is (empty? ($ "b[z]" tree)))))
+
+(deftest $-match-attribute-exists-multiple
+  (let [tree [:a {} [:b {:x "x" :y ""}] [:c {:y "1"}]]]
+    (is (= '([:b {:x "x" :y ""}] [:c {:y "1"}])
+           ($ "*[y]" tree)))))
+

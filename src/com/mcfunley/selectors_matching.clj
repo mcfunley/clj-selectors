@@ -110,3 +110,7 @@
 
   (build-set-matcher match-in-set))
 
+
+(defn match-attribute-exists
+  [name]
+  (fn [elems] (filter #((keyword name) (attributes %)) elems)))
