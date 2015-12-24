@@ -91,12 +91,12 @@
     `(~matcher ~left-side ~right-side)))
 
   (match (vec tokens)
-    []          ()
-    [a]         (parse-token a)
-    [_ ">" _]   (binop 'match-with-child tokens)
-    [_ "+" _]   (binop 'match-immediately-preceding tokens)
-    [_ "~" _]   (binop 'match-preceding tokens)
-    [a & r]     `(match-ancestor ~(parse-token a) ~(consume-tokens r))))
+    []            ()
+    [a]           (parse-token a)
+    [_ ">" & r]   (binop 'match-with-child tokens)
+    [_ "+" & r]   (binop 'match-immediately-preceding tokens)
+    [_ "~" & r]   (binop 'match-preceding tokens)
+    [a & r]       `(match-ancestor ~(parse-token a) ~(consume-tokens r))))
 
 
 (defn parse-selector

@@ -19,14 +19,32 @@
 
 (defn selector? [x] (isa? (type x) Selector))
 
+
+(defn- ensure-tree-seq
+  [tree]
+  (if (and (sequential? tree) (keyword? (first tree)))
+    (list tree)
+    tree))
+
+
 (defn compile-selector
   [source]
   (let [expression (parse-selector source)]
     (Selector. source expression (eval expression))))
 
+
+(defn- ensure-compiled
+  [selector]
+  (if (selector? selector) selector (compile-selector selector)))
+
+
 (defn $
-  [selector tree]
-  (let [s (if (selector? selector) selector (compile-selector selector))]
-    (coalesce-matches (map s (element-seq tree)))))
+  [selector e]
 
-
+  (let [s (ensure-compiled selector)
+        trees (ensure-tree-seq e)
+        tree-element-seqs (map element-seq trees)
+        match-candidates (map list (flatten-elements tree-element-seqs))
+        match-sets (map s match-candidates)]
+    
+    (flatten-elements match-sets)))

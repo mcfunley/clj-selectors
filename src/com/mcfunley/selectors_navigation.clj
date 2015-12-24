@@ -16,3 +16,14 @@
 (defn element-seq [elem] (tree-seq identity children elem))
 
 (defn descendant-seq [elem] (rest (element-seq elem)))
+
+(defn classnames [elem]
+  (let [class-attr (-> elem attributes :class)]
+    (when class-attr
+      (clojure.string/split class-attr #"\s+"))))
+
+(defn flatten-elements
+  [element-lists]
+  (reduce concat (filter identity element-lists)))
+
+(defn match-candidate-seq [element-seq] (map list element-seq))

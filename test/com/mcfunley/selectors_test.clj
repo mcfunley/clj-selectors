@@ -194,6 +194,10 @@
   (is (= (tokenize-selector ".foo[bar baz|=\"en\" goo  ]")
          '(".foo[bar baz|=\"en\" goo  ]"))))
 
+(deftest tokenize-child-and-predecessor-selector
+  (is (= (tokenize-selector "b.foo > c ~ .foo")
+         '("b.foo" ">" "c" "~" ".foo"))))
+
 
 ; tokenize-element
 
@@ -379,6 +383,16 @@
            (selectors/match-class "bar"))
          (:expression (compile-selector "foo.bar")))))
 
+(deftest compile-child-and-predecessor
+  (is (= `(selectors/match-with-child
+           (selectors/match-all
+            (selectors/match-element-type "b")
+            (selectors/match-class "foo"))
+           (selectors/match-preceding
+            (selectors/match-element-type "c")
+            (selectors/match-class "foo")))
+         (:expression (compile-selector "b.foo > c ~ .foo")))))
+
 
 ;; ==============================================================================
 ;; selector?
@@ -443,98 +457,85 @@
   (is ((match-element-type "foo") [:foo {}])))
 
 (deftest match-element-type-miss
-  (is (not ((match-element-type "foo") [:bar {}]))))
+  (is (empty? ((match-element-type "foo") (list [:bar {}])))))
 
 (deftest match-element-type-returns-element
   (let [element [:foo {}]]
-    (is (= ((match-element-type "foo") element)
+    (is (= ((match-element-type "foo") (list element))
            (list element)))))
 
 (deftest match-id-works
-  (is ((match-id "bar") [:foo { :id "bar" }])))
+  (is ((match-id "bar") (list [:foo { :id "bar" }]))))
 
 (deftest match-id-miss
-  (is (not ((match-id "baz") [:foo { :id "bar" }]))))
+  (is (empty? ((match-id "baz") (list [:foo { :id "bar" }])))))
 
 (deftest match-id-returns-element
   (let [element [:foo { :id "bar" }]]
-    (is (= ((match-id "bar") element) (list element)))))
+    (is (= ((match-id "bar") (list element)) (list element)))))
 
 (deftest match-id-no-id-attribute
-  (is (not ((match-id "baz") [:foo {}]))))
+  (is (empty? ((match-id "baz") (list [:foo {}])))))
 
 (deftest match-all-works
   (is (let [expr (match-all
                   (match-element-type "foo")
                   (match-id "bar"))]
-        (expr [:foo { :id "bar" }]))))
+        (expr (list [:foo { :id "bar" }])))))
 
 (deftest match-all-fail
-  (is (not (let [expr (match-all
-                       (match-element-type "foo")
-                       (match-id "bar"))]
-             (expr [:foo { :id "baz" }])))))
+  (is (empty? (let [expr (match-all
+                          (match-element-type "foo")
+                          (match-id "bar"))]
+                (expr (list [:foo { :id "baz" }]))))))
+
+
+(deftest match-all-with-element-seq
+  (let [elems '([:b {:class "x"} [:c {:class "x y"}]]
+                [:c {:class "x y"}]
+                [:d {} [:e {:class "y x z"}] [:b {:class "a b x"}]]
+                [:e {:class "y x z"}]
+                [:b {:class "a b x"}])
+        m (match-all (match-element-type "b") (match-class "x"))]
+    
+    (is (= '([:b {:class "x"} [:c {:class "x y"}]]
+             [:b {:class "a b x"}])
+           (m elems)))))
+           
 
 (deftest match-class-works-one-class
-  (is ((match-class "foo") [:div { :class "foo" }])))
+  (is ((match-class "foo") (list [:div { :class "foo" }]))))
 
 (deftest match-class-miss
-  (is (not ((match-class "foo") [:div { :class "bar" }]))))
+  (is (empty? ((match-class "foo") (list [:div { :class "bar" }])))))
 
 (deftest match-class-many-classes
-  (is ((match-class "foo") [:div { :class "bar foo" }])))
+  (is ((match-class "foo") (list [:div { :class "bar foo" }]))))
 
 (deftest match-class-whitespace-significant
-  (is (not ((match-class "foo") [:div { :class "bar foobar" }]))))
+  (is (empty? ((match-class "foo") (list [:div { :class "bar foobar" }])))))
 
 (deftest match-class-no-class-attr
-  (is (not ((match-class "foo") [:div {}]))))
+  (is (empty? ((match-class "foo") (list [:div {}])))))
 
 (deftest match-class-case-sensitive
-  (is (not ((match-class "foo") [:div { :class "Foo" }]))))
+  (is (empty? ((match-class "foo") (list [:div { :class "Foo" }])))))
 
 (deftest match-class-returns-element
   (let [element [:div { :class "foo bar baz" }]]
-    (is (= ((match-class "bar") element) (list element)))))
-
-
-(deftest match-descendants-one-level
-  (let [element [:a {} [:b { :id "x" }]]]
-    (is (= '([:b { :id "x" }])
-           (match-descendants (match-id "x") element)))))
-
-(deftest match-descendants-multiple
-  (let [element [:a {} [:b { :id "x" }] [:c { :id "x" }]]]
-    (is (= '([:b { :id "x" }] [:c { :id "x" }])
-           (match-descendants (match-id "x") element)))))
-
-(deftest match-descendants-two-levels
-  (let [element [:a {} [:b { :id "x" } [:c { :id "x" }]]]]
-    (is (= '([:b { :id "x" } [ :c { :id "x" }]] [:c { :id "x" }])
-           (match-descendants (match-id "x") element)))))
-
-(deftest match-descendants-many-levels-multiple-branches
-  (let [element [:a {}
-                 [:b {:id "x"}
-                  [:c {:id "x"}]]
-                 [:d {}
-                  [:e {}
-                   [:f {:id "x"}] [:g {:id "x"}]]]]
-        matches (match-descendants (match-id "x") element)]
-    
-    (is (= '(:b :c :f :g) (map tag matches)))))
+    (is (= ((match-class "bar") (list element)) (list element)))))
 
 (deftest match-ancestor-works
   (let [expr (match-ancestor (match-element-type "foo") (match-id "goo"))
         tree [:foo {} [:bar {} [:baz { :id "goo" }]]]]
     (is (= (list [:baz { :id "goo" }])
-           (expr tree)))))
+           (expr (list tree))))))
 
 (deftest match-ancestor-match-class
   (let [expr (match-ancestor (match-element-type "foo") (match-class "goo"))
         tree [:foo {} [:bar { :class "goo" }]]]
 
-    (is (= '([:bar { :class "goo" }]) (expr tree)))))
+    (is (= '([:bar { :class "goo" }]) (expr (list tree))))))
 
 (deftest match-ancestor-multiple-matches
   (let [expr (match-ancestor (match-element-type "foo") (match-class "goo"))
@@ -543,7 +544,7 @@
                [:baz { :class "goo ball" }]
                [:qux {}]
                [:fizz { :class "boy-named-goo" }]]]
-        result (expr tree)
+        result (expr (list tree))
         result-tags (map first result)]
 
     (is (= '(:bar :baz) result-tags))))
@@ -555,7 +556,7 @@
               [:d {}
                [:e {:class "y x z"}]]]
         expr (match-ancestor (match-element-type "a") (match-class "x"))
-        result (expr tree)]
+        result (expr (list tree))]
     (is (= '(:b :c :e) (map first result)))))
 
 
@@ -564,15 +565,15 @@
 
 (deftest invoke-match-all-type-and-class-miss
   (let [s (compile-selector "a.b")]
-    (is (= nil (s [:a {} [:b {:class "x"}]])))))
+    (is (empty? (s (list [:a {} [:b {:class "x"}]]))))))
 
 
 ;; ==============================================================================
-;; coalesce-matches
+;; flatten-elements
 
-(deftest coalesce-matches-works
+(deftest flatten-elements-works
   (is (= '([:a {}] [:b {}] [:c {}])
-         (coalesce-matches '(nil ([:a {}]) ([:b {}] [:c {}]) nil nil)))))
+         (flatten-elements '(nil ([:a {}]) ([:b {}] [:c {}]) nil nil)))))
   
 
 ;; ==============================================================================
@@ -614,3 +615,52 @@
   (let [tree [:a {} [:b {:class "foo"}] [:c {}]]]
     (is (empty? ($ "a > .bleh" tree)))))
 
+(deftest $-predecessor
+  (let [tree [:a {} [:b {:class "foo"}] [:c {}] [:d {:class "foo"}]]]
+    (is (= '(:d) (map tag ($ "c ~ .foo" tree))))))
+
+(deftest $-predecessor-extra-in-rest
+  (let [tree [:a {} [:b {:class "foo"}] [:c {}] [:d {:class "foo"}]]]
+    (is (= '(:c) (map tag ($ "b ~ c" tree))))))
+
+(deftest $-match-element-type-*
+  (let [tree [:a {} [:b {:class "foo"}] [:c {}] [:d {:class "foo"}]]]
+    (is (= '(:a :b :c :d) (map tag ($ "*" tree))))))
+
+(deftest $-predecessor-miss
+  (let [tree [:a {} [:b {:class "foo"}] [:c {}] [:d {:class "foo"}]]]
+    (is (empty? ($ "c ~ b.foo" tree)))))
+
+(deftest $-immediately-preceding
+  (let [tree [:a {} [:b {:class "foo"}] [:c {}] [:d {:class "foo"}]]]
+    (is (= '(:c) (map tag ($ "b.foo + *" tree))))))
+
+(deftest $-immediately-preceding-extra-in-rest
+  (let [tree [:a {} [:b {:class "foo"}] [:c {}] [:d {:class "foo"}]]]
+    (is (= '(:c) (map tag ($ "b + c" tree))))))
+
+(deftest $-match-child-and-predecessor
+  (let [tree [:a {}
+              [:b {:class "foo"}
+               [:c {}] [:d {:class "foo"}] [:e {} ] [:f {:class "foo"}]]]]
+    (is (= '([:d {:class "foo"}] [:f {:class "foo"}])
+           ($ "b.foo > c ~ .foo" tree)))))
+
+(deftest $-match-child-and-predecessor-miss
+  (let [tree [:a {}
+              [:b {:class "foo"}
+               [:c {}] [:d {:class "foo"}] [:e {} ] [:f {:class "foo"}]]]]
+    (is (empty? ($ "b.foo > x ~ .foo" tree)))))
+
+(deftest $-match-descendant-and-predecessor
+  (let [tree [:a {}
+              [:b {:class "foo"}
+               [:c {}] [:d {:class "foo"}] [:e {} ] [:f {:class "foo"}]]]]
+    (is (= '(:d :f) (map tag ($ "b.foo c ~ .foo" tree))))))
+
+(deftest $-match-child-and-immediate-predecessor
+  (let [tree [:a {}
+              [:b {:class "foo"}
+               [:c {}] [:d {:class "foo"}] [:e {} ] [:f {:class "foo"}]]]]
+    (is (= '([:d {:class "foo"}])
+           ($ "b.foo > c + .foo" tree)))))
