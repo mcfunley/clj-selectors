@@ -705,3 +705,18 @@
     (is (empty? ($ "[x=\"1\"]" tree)))))
 
 
+(deftest $-match-attribute-value-contains-word
+  (let [tree [:a {} [:b {:x "foo bar" :y "1"}] [:c {:x "bar baz"}]]]
+    (is (= '([:b {:x "foo bar" :y "1"}])
+           ($ "[x ~= \"foo\"]" tree)))))
+
+(deftest $-match-attribute-value-contains-word-miss
+  (let [tree [:a {} [:b {:x "foo bar" :y "1"}] [:c {:x "bar baz"}]]]
+    (is (empty? ($ "[x ~= \"fizz\"]" tree)))))
+
+(deftest $-match-attribute-value-contains-word-attr-miss
+  (let [tree [:a {} [:b {:x "foo bar" :y "1"}] [:c {:x "bar baz"}]]]
+    (is (empty? ($ "[xx ~= \"foo\"]" tree)))))
+
+
+

@@ -17,10 +17,14 @@
 
 (defn descendant-seq [elem] (rest (element-seq elem)))
 
-(defn classnames [elem]
-  (let [class-attr (-> elem attributes :class)]
-    (when class-attr
-      (clojure.string/split class-attr #"\s+"))))
+(defn attribute-words
+  [elem attr]
+  (let [keyfun (if (keyword? attr) attr (keyword attr))
+        attr-val (-> elem attributes keyfun)]
+    (when attr-val
+      (clojure.string/split attr-val #"\s+"))))
+
+(defn classnames [elem] (attribute-words elem :class))
 
 (defn flatten-elements
   [element-lists]

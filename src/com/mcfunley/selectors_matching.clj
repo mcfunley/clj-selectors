@@ -122,3 +122,10 @@
 (defn match-attribute-value
   [name value]
   (fn [elems] (attr-filter #(= ((keyword name) %) value) elems)))
+
+(defn match-attribute-value-contains-word
+  [name word]
+  (def is-word? (partial = word))
+  (fn [elems] (filter #(some is-word? (attribute-words % name)) elems)))
+
+
