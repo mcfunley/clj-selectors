@@ -722,7 +722,33 @@
   (let [tree [:a {} [:b {:x "foo bar" :y "1"}] [:c {:x "fizz"}]]]
     (is (= '([:b {:x "foo bar" :y "1"}] [:c {:x "fizz"}])
            ($ "*[x ^= f]" tree)))))
+
 (deftest $-match-attribute-value-begins-miss
   (let [tree [:a {} [:b {:x "foo bar" :y "1"}] [:c {:x "fizz"}]]]
     (is (empty? ($ "*[x ^= z]" tree)))))
+
+(deftest $-multiple-attribute-things
+  (let [tree [:a {} [:b {:x "foo bar" :y "1"}] [:c {:x "fizz"}]]]
+    (is (= '([:c {:x "fizz"}])
+           ($ "*[x$=z x^=f]" tree)))))
+
+(deftest $-multiple-attributes
+  (let [tree [:a {} [:b {:x "foo bar" :y "1"}] [:c {:x "fizz"}]]]
+    (is (= '([:b {:x "foo bar" :y "1"}])
+           ($ "b[x~=foo y^=1]" tree)))))
+
+(deftest $-match-attribute-contains-pattern
+  (let [tree [:a {} [:b {:x "foo bar baz"}]]]
+    (is (= '([:b {:x "foo bar baz"}])
+           ($ "*[x *= \"bar b\"]" tree)))))
+
+(deftest $-match-attribute-contains-pattern-miss
+  (let [tree [:a {} [:b {:x "foo bar baz"}]]]
+    (is (empty? ($ "*[x *= \"bar g\"]" tree)))))
+
+
+
+
+
+
 
