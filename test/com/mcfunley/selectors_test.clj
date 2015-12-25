@@ -718,5 +718,11 @@
   (let [tree [:a {} [:b {:x "foo bar" :y "1"}] [:c {:x "bar baz"}]]]
     (is (empty? ($ "[xx ~= \"foo\"]" tree)))))
 
-
+(deftest $-match-attribute-value-begins
+  (let [tree [:a {} [:b {:x "foo bar" :y "1"}] [:c {:x "fizz"}]]]
+    (is (= '([:b {:x "foo bar" :y "1"}] [:c {:x "fizz"}])
+           ($ "*[x ^= f]" tree)))))
+(deftest $-match-attribute-value-begins-miss
+  (let [tree [:a {} [:b {:x "foo bar" :y "1"}] [:c {:x "fizz"}]]]
+    (is (empty? ($ "*[x ^= z]" tree)))))
 

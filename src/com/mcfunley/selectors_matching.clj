@@ -128,4 +128,11 @@
   (def is-word? (partial = word))
   (fn [elems] (filter #(some is-word? (attribute-words % name)) elems)))
 
-
+(defn match-attribute-value-begins
+  [name beginning]
+  
+  (defn begins? [^String attrval]
+    (when attrval
+      (.startsWith attrval beginning)))
+  
+  (fn [elems] (attr-filter #(begins? ((keyword name) %)) elems)))
