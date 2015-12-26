@@ -747,8 +747,13 @@
     (is (empty? ($ "*[x *= \"bar g\"]" tree)))))
 
 
+(deftest $-match-attribute-value-lang-subcode
+  (let [tree [:a {} [:b {:y "en"}] [:c {:y "en-US"}]]]
+    (is (= '([:b {:y "en"}] [:c {:y "en-US"}])
+           ($ "*[y|=en]" tree)))))
 
-
-
+(deftest $-match-attribute-value-lang-subcode-miss
+  (let [tree [:a {} [:b {:y "en"}] [:c {:y "en-US"}]]]
+    (is (empty? ($ "*[y|=de]" tree)))))
 
 

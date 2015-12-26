@@ -156,3 +156,14 @@
 
   (fn [elems] (attr-filter #(contains? ((keyword name) %)) elems)))
 
+(defn match-attribute-value-lang-subcode
+  [name code]
+
+  (defn match? [^String attrval]
+    (when attrval
+      (or (.startsWith attrval code)
+          (.startsWith attrval (clojure.string/join '(code "-"))))))
+  
+  (fn [elems] (attr-filter #(match? ((keyword name) %)) elems)))
+
+
