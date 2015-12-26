@@ -31,3 +31,8 @@
   (reduce concat (filter identity element-lists)))
 
 (defn match-candidate-seq [element-seq] (map list element-seq))
+
+(defn text-node-seq
+  "Sequence of text-node descendants of element, depth-first"
+  [elem]
+  (filter string? (tree-seq sequential? #(drop 2 %) elem)))

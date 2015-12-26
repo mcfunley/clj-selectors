@@ -480,6 +480,10 @@
            (map tag (element-seq tree))))))
 
 
+(deftest element-text-node-seq-works
+  (is (= '("foo" "bar" "baz" "goo")
+         (text-node-seq [:a {} "foo" [:b {} "bar"] [:c {} "baz"] "goo"]))))
+
 
 ;; ==============================================================================
 ;; Selector
@@ -794,5 +798,15 @@
   (let [tree [:a {} [:b {:y "en"}] [:c {:y "en-US"}]]]
     (is (empty? ($ "*[y|=de]" tree)))))
 
+
+(deftest $-first-letter
+  (let [t [:a {} "foo" [:b {} "bar"] [:c {} "baz"] "goo"]]
+    (is (= '(\f \b \b)
+           ($ "::first-letter" t)))))
+
+(deftest $-first-letter-first-node-not-text
+  (let [t [:a {} [:b {} "foo"] [:c {} "bar"] "baz"]]
+    (is (= '(\f)
+           ($ "a::first-letter" t)))))
 
 

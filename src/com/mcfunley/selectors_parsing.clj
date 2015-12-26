@@ -60,8 +60,9 @@
   [cls]
   (when 
       (#{ ":link" ":visited" ":active" ":hover" ":focus" ":target" ":enabled" 
-         ":disabled" ":checked"  } cls)
+         ":disabled" ":checked" ":root" } cls)
     (unsupported (format "%s pseudo-class not supported." cls))))
+
 
 (defn parse-pseudo-class
   [token]
@@ -69,8 +70,18 @@
 
   (let [[operator arg] (tokenize-pseudo-class token)]
     (case operator
-      ":lang"   (unsupported ":lang pseudo-class not supported")
-
+      ":lang"             (unsupported ":lang pseudo-class not supported")
+      ":nth-child"        :todo
+      ":nth-last-child"   :todo
+      ":nth-of-type"      :todo
+      ":nth-last-of-type" :todo
+      ":first-child"      :todo
+      ":last-child"       :todo
+      ":only-child"       :todo
+      ":only-of-type"     :todo
+      ":empty"            :todo
+      ":not"              :todo
+      
       (parse-error (format "Unrecognized pseudo-class expression %s" token)))))
 
 

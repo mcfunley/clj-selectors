@@ -167,3 +167,7 @@
   (fn [elems] (attr-filter #(match? ((keyword name) %)) elems)))
 
 
+(defn select-first-letter
+  []
+  (fn [elems] (map #(first (first (text-node-seq %))) elems)))
+    
