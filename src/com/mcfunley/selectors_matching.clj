@@ -132,39 +132,39 @@
 (defn match-attribute-value-begins
   [name beginning]
   
-  (defn begins? [^String attrval]
-    (when attrval
-      (.startsWith attrval beginning)))
-  
-  (fn [elems] (attr-filter #(begins? ((keyword name) %)) elems)))
+  (letfn [(begins? [^String attrval]
+          (when attrval
+            (.startsWith attrval beginning)))]
+    
+    (fn [elems] (attr-filter #(begins? ((keyword name) %)) elems))))
 
 (defn match-attribute-value-ends
   [name ending]
 
-  (defn ends? [^String attrval]
-    (when attrval
-      (.endsWith attrval ending)))
+  (letfn [(ends? [^String attrval]
+            (when attrval
+              (.endsWith attrval ending)))]
 
-  (fn [elems] (attr-filter #(ends? ((keyword name) %)) elems)))
+    (fn [elems] (attr-filter #(ends? ((keyword name) %)) elems))))
 
 (defn match-attribute-value-contains-pattern
   [name substr]
 
-  (defn contains? [^String attrval]
-    (when attrval
-      (.contains attrval substr)))
+  (letfn [(contains? [^String attrval]
+            (when attrval
+              (.contains attrval substr)))]
 
-  (fn [elems] (attr-filter #(contains? ((keyword name) %)) elems)))
+    (fn [elems] (attr-filter #(contains? ((keyword name) %)) elems))))
 
 (defn match-attribute-value-lang-subcode
   [name code]
 
-  (defn match? [^String attrval]
-    (when attrval
-      (or (.startsWith attrval code)
-          (.startsWith attrval (clojure.string/join '(code "-"))))))
+  (letfn [(match? [^String attrval]
+            (when attrval
+              (or (.startsWith attrval code)
+                  (.startsWith attrval (clojure.string/join '(code "-"))))))]
   
-  (fn [elems] (attr-filter #(match? ((keyword name) %)) elems)))
+    (fn [elems] (attr-filter #(match? ((keyword name) %)) elems))))
 
 
 (defn select-first-letter
