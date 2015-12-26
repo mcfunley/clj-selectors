@@ -50,7 +50,7 @@
 (defn parse-pseudo-element
   [token]
   (match token
-    "::first-line"    `(select-first-line)
+    "::first-line"    (unsupported "::first-line pseudo-element not supported.")
     "::first-letter"  `(select-first-letter)
     "::before"        (unsupported "::before pseudo element not supported.")
     "::after"         (unsupported "::after pseudo element not supported.")))

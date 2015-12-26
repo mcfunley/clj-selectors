@@ -74,12 +74,6 @@
            (selectors/match-class "foo"))
          (parse-selector "*.foo"))))
 
-(deftest parse-first-line
-  (is (= `(selectors/match-all
-           (selectors/match-element-type "foo")
-           (selectors/select-first-line)))
-      (parse-selector "foo::first-line")))
-
 (deftest parse-first-letter
   (is (= `(selectors/match-all
            (selectors/match-element-type "foo")
@@ -143,21 +137,15 @@
            (selectors/match-attribute-value-contains-pattern "qux" "quick"))
          (parse-selector "#foo[bar baz=\"goo ball\" qux *= \"quick\"]"))))
 
-(deftest parse-complicated-first-line
+(deftest parse-complicated-first-letter
   (is (= `(selectors/match-ancestor
            (selectors/match-all
             (selectors/match-id "foo")
             (selectors/match-attribute-value "bar" "baz"))
            (selectors/match-all
             (selectors/match-class "qux")
-            (selectors/select-first-line)))
-         (parse-selector "#foo[bar=\"baz\"] .qux::first-line"))))
-
-(deftest parse-first-line
-  (is (= `(selectors/match-all
-           (selectors/match-class "foo")
-           (selectors/select-first-line))
-         (parse-selector ".foo::first-line"))))
+            (selectors/select-first-letter)))
+         (parse-selector "#foo[bar=\"baz\"] .qux::first-letter"))))
 
 (deftest parse-first-letter
   (is (= `(selectors/match-with-child
@@ -398,8 +386,8 @@
             (bar (quack quack)))))))
 
 (deftest simplify-single-select
-  (is (= '(com.mcfunley.selectors/select-first-line)
-         (simplify '(com.mcfunley.selectors/select-first-line)))))
+  (is (= '(com.mcfunley.selectors/select-first-letter)
+         (simplify '(com.mcfunley.selectors/select-first-letter)))))
 
 
 ;; ==============================================================================
