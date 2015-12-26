@@ -25,20 +25,21 @@
   "The first pass tokenizer run on a whole selector expression."
   [selector]
 
-  (defn replace-in-brackets
-    [g pattern repl]
-    (match g
-      #"^\[.*\]$" (clojure.string/replace g pattern repl)
-      :else g))
+  (letfn [(replace-in-brackets
+            [g pattern repl]
+            (match g
+              #"^\[.*\]$" (clojure.string/replace g pattern repl)
+              :else g))
 
-  (defn hack-brackets [g] (replace-in-brackets g #"\s" "\0"))
-  (defn unhack-brackets [g] (clojure.string/replace g #"\x00" " "))
+          (hack-brackets [g] (replace-in-brackets g #"\s" "\0"))
+
+          (unhack-brackets [g] (clojure.string/replace g #"\x00" " "))]
   
-  (let [bracket-groups (extract-bracketed selector)
-        hacked-brackets (map hack-brackets bracket-groups)
-        joined (clojure.string/join hacked-brackets)
-        element-tokens (clojure.string/split joined #"\s+")]
-    (map unhack-brackets (filter not-empty element-tokens))))
+    (let [bracket-groups (extract-bracketed selector)
+          hacked-brackets (map hack-brackets bracket-groups)
+          joined (clojure.string/join hacked-brackets)
+          element-tokens (clojure.string/split joined #"\s+")]
+      (map unhack-brackets (filter not-empty element-tokens)))))
 
 
 
@@ -60,17 +61,19 @@
   `foo.bar[baz=\"goo\"]`)."
   [sel]
 
-  (defn split-words
-    [s]
-    (match s
-      #"^\"[^\"]+\"$" (clojure.string/replace s #"\"" "")
-      :else           (clojure.string/split (clojure.string/trim s) #"\s+")))
+  (letfn [(split-ws [s] (clojure.string/split (clojure.string/trim s) #"\s+"))
+          
+          (split-words
+            [s]
+            (match s
+              #"^\"[^\"]+\"$" (clojure.string/replace s #"\"" "")
+              :else           (split-ws s)))]
   
-  (let [expr (clojure.string/replace sel #"[\[\]]" "")
-        trimmed (clojure.string/trim expr)
-        padded (clojure.string/replace trimmed #"([~|$\^*]?=)" " $1 ")
-        quoted-separated (extract-quoted padded)]
-    (flatten (map split-words quoted-separated))))
+    (let [expr (clojure.string/replace sel #"[\[\]]" "")
+          trimmed (clojure.string/trim expr)
+          padded (clojure.string/replace trimmed #"([~|$\^*]?=)" " $1 ")
+          quoted-separated (extract-quoted padded)]
+      (flatten (map split-words quoted-separated)))))
 
 
 (defn tokenize-pseudo-class
