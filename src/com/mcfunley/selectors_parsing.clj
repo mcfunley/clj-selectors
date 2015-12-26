@@ -14,31 +14,31 @@
 (defn read-attribute-selector-tokens
   [tokens]
 
-  (defn collect-expressions
-    [expression rest-tokens]
-    (let [rest-expressions (read-attribute-selector-tokens rest-tokens)]
-      (cons expression (filter some? (list rest-expressions)))))
+  (letfn [(collect-expressions
+            [expression rest-tokens]
+            (let [rest-expressions (read-attribute-selector-tokens rest-tokens)]
+              (cons expression (filter some? (list rest-expressions)))))
 
-  (defn binop
-    [matcher-sym a b r]
-    (let [matcher (symbol-to-matcher matcher-sym)
-          op `(~matcher ~a ~b)]
-      (if (empty? r)
-        op
-        `(match-all ~@(collect-expressions op r)))))
+          (binop
+            [matcher-sym a b r]
+            (let [matcher (symbol-to-matcher matcher-sym)
+                  op `(~matcher ~a ~b)]
+              (if (empty? r)
+                op
+                `(match-all ~@(collect-expressions op r)))))]
        
-  (match (vec tokens)
-    []             nil
+    (match (vec tokens)
+      []             nil
     
-    [a "~=" b & r] (binop 'match-attribute-value-contains-word a b r)
-    [a "^=" b & r] (binop 'match-attribute-value-begins a b r)
-    [a "$=" b & r] (binop 'match-attribute-value-ends a b r)
-    [a "*=" b & r] (binop 'match-attribute-value-contains-pattern a b r)
-    [a "|=" b & r] (binop 'match-attribute-value-lang-subcode a b r)
-    [a "=" b & r]  (binop 'match-attribute-value a b r)
+      [a "~=" b & r] (binop 'match-attribute-value-contains-word a b r)
+      [a "^=" b & r] (binop 'match-attribute-value-begins a b r)
+      [a "$=" b & r] (binop 'match-attribute-value-ends a b r)
+      [a "*=" b & r] (binop 'match-attribute-value-contains-pattern a b r)
+      [a "|=" b & r] (binop 'match-attribute-value-lang-subcode a b r)
+      [a "=" b & r]  (binop 'match-attribute-value a b r)
     
-    [a & r]        `(match-all
-                     ~@(collect-expressions `(match-attribute-exists ~a) r))))
+      [a & r]        `(match-all
+                       ~@(collect-expressions `(match-attribute-exists ~a) r)))))
                      
 
 
@@ -101,20 +101,20 @@
 (defn consume-tokens
   [tokens]
 
-  (defn binop
-    [matcher-sym tokens]
-    (let [matcher (symbol-to-matcher matcher-sym)
-          left-side (parse-token (first tokens))
-          right-side (consume-tokens (drop 2 tokens))]
-    `(~matcher ~left-side ~right-side)))
+  (letfn [(binop
+            [matcher-sym tokens]
+            (let [matcher (symbol-to-matcher matcher-sym)
+                  left-side (parse-token (first tokens))
+                  right-side (consume-tokens (drop 2 tokens))]
+              `(~matcher ~left-side ~right-side)))]
 
-  (match (vec tokens)
-    []            ()
-    [a]           (parse-token a)
-    [_ ">" & r]   (binop 'match-with-child tokens)
-    [_ "+" & r]   (binop 'match-immediately-preceding tokens)
-    [_ "~" & r]   (binop 'match-preceding tokens)
-    [a & r]       `(match-ancestor ~(parse-token a) ~(consume-tokens r))))
+    (match (vec tokens)
+      []            ()
+      [a]           (parse-token a)
+      [_ ">" & r]   (binop 'match-with-child tokens)
+      [_ "+" & r]   (binop 'match-immediately-preceding tokens)
+      [_ "~" & r]   (binop 'match-preceding tokens)
+      [a & r]       `(match-ancestor ~(parse-token a) ~(consume-tokens r)))))
 
 
 (defn parse-selector
