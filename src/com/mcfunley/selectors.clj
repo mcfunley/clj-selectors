@@ -3,6 +3,7 @@
             [clojure.core.match.regex :refer :all]))
 
 
+(load "selectors_exception")
 (load "selectors_tokenizing")
 (load "selectors_parsing")
 (load "selectors_optimize")

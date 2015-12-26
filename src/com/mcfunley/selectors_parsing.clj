@@ -2,12 +2,6 @@
 ;; expression trees.
 ;;
 
-(import java.lang.UnsupportedOperationException)
-
-(defn unsupported
-  [msg]
-  (throw (UnsupportedOperationException. (str msg))))
-
 
 (declare consume-tokens simplify)
 
@@ -62,9 +56,22 @@
     "::after"         (unsupported "::after pseudo element not supported.")))
 
 
+(defn- throw-unsupported-simple-pseudo-class
+  [cls]
+  (when 
+      (#{ ":link" ":visited" ":active" ":hover" ":focus" ":target" ":enabled" 
+         ":disabled" ":checked"  } cls)
+    (unsupported (format "%s pseudo-class not supported." cls))))
+
 (defn parse-pseudo-class
   [token]
-  :todo-pseudo-class) 
+  (throw-unsupported-simple-pseudo-class token)
+
+  (let [[operator arg] (tokenize-pseudo-class token)]
+    (case operator
+      ":lang"   (unsupported ":lang pseudo-class not supported")
+
+      (parse-error (format "Unrecognized pseudo-class expression %s" token)))))
 
 
 (defn parse-token

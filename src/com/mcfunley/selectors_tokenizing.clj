@@ -71,3 +71,21 @@
         padded (clojure.string/replace trimmed #"([~|$\^*]?=)" " $1 ")
         quoted-separated (extract-quoted padded)]
     (flatten (map split-words quoted-separated))))
+
+
+(defn tokenize-pseudo-class
+  "Tokenizes a pseudo-class string, e.g. :foo(bar). Returns a vector of 
+  length 2. The first element is the pseudo-class operator, and 
+  the second element is the parenthesized expression, if any."
+  ;; These are simple single colon-prefixed words, possibly with a suffix
+  ;; in parens.
+  [token]
+
+  (if-let [paren-match (re-find #"^(:[a-zA-Z\-]+)\((.*)\)$" token)]
+    (vec (drop 1 paren-match))
+
+    (if-let [simple-match (re-find #"^(:[a-zA-Z\-]+)$" token)]
+      (conj (vec (drop 1 simple-match)) nil)
+
+      (parse-error (format "Unrecognized pseudo-class: %s" token)))))
+

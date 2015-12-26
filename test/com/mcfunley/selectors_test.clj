@@ -167,6 +167,23 @@
             (selectors/select-first-letter)))
          (parse-selector "foo > #bar::first-letter"))))
 
+
+; pseudo-classes
+
+(deftest parse-unsupported-simple-pseudo-class
+  (is (thrown? java.lang.UnsupportedOperationException
+               (parse-pseudo-class ":link"))))
+
+(deftest parse-:lang
+  (is (thrown? java.lang.UnsupportedOperationException
+               (parse-pseudo-class ":lang(fr)"))))
+
+(deftest parse-unrecognized-pseudo-class
+  (is (thrown? java.lang.RuntimeException
+               (parse-pseudo-class ":this-is-not-a-thing"))))
+
+
+
 ;; ==============================================================================
 ;; tokenizing tests
 
@@ -268,6 +285,27 @@
   (is (= (tokenize-attribute-selector "[bar baz|=\"en\" goo  ]")
          '("bar" "baz" "|=" "en" "goo"))))
 
+
+; tokenize-pseudo-class
+
+(deftest tokenize-pseudo-class-simple
+  (is (= [":foo" nil] (tokenize-pseudo-class ":foo"))))
+
+(deftest tokenize-pseudo-class-parens
+  (is (= [":thing" "some stuff"] (tokenize-pseudo-class ":thing(some stuff)"))))
+
+(deftest tokenize-pseudo-class-hyphens
+  (is (= [":some-thing" "some stuff"]
+         (tokenize-pseudo-class ":some-thing(some stuff)"))))
+
+(deftest tokenize-pseudo-class-extra-stuff
+  (is (thrown? java.lang.RuntimeException
+               (tokenize-pseudo-class ":foo(bar)baz"))))
+
+(deftest tokenize-pseudo-class-unclosed-paren
+  (is (thrown? java.lang.RuntimeException
+               (tokenize-pseudo-class ":foo(bar"))))
+  
 
 ;; ==============================================================================
 ;; random regressions
@@ -755,5 +793,6 @@
 (deftest $-match-attribute-value-lang-subcode-miss
   (let [tree [:a {} [:b {:y "en"}] [:c {:y "en-US"}]]]
     (is (empty? ($ "*[y|=de]" tree)))))
+
 
 
