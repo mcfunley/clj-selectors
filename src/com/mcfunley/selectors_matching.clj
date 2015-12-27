@@ -170,4 +170,8 @@
 (defn select-first-letter
   []
   (fn [elems] (map #(first (first (text-node-seq %))) elems)))
-    
+
+
+(defn match-not
+  [selector-fun]
+  (fn [elems] (filter #(empty? (selector-fun (list %))) elems)))

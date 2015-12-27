@@ -20,7 +20,6 @@
   (group-extract #"([^\[]+)?(\[[^\[]+\])?" s))
 
 
-
 (defn tokenize-selector
   "The first pass tokenizer run on a whole selector expression."
   [selector]

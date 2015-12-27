@@ -3,7 +3,10 @@
 ;;
 
 
-(declare consume-tokens simplify)
+(declare
+ consume-tokens
+ simplify
+ parse-selector)
 
 
 (defn symbol-to-matcher
@@ -80,7 +83,7 @@
       ":only-child"       :todo
       ":only-of-type"     :todo
       ":empty"            :todo
-      ":not"              :todo
+      ":not"              `(match-not ~(parse-selector arg))
       
       (parse-error (format "Unrecognized pseudo-class expression %s" token)))))
 

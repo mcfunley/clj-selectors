@@ -203,6 +203,20 @@
   (is (= (tokenize-selector "b.foo > c ~ .foo")
          '("b.foo" ">" "c" "~" ".foo"))))
 
+(deftest tokenize-selector-pseudo-class-expression
+  (is (= (tokenize-selector "foo.bar:not(something) baz")
+         '("foo.bar:not(something)" "baz"))))
+
+(deftest tokenize-selector-pseudo-class-expression-whitespace
+  (is (= (tokenize-selector "foo.bar:not(x y z) baz")
+         '("foo.bar:not(x y z)" "baz"))))
+
+(deftest tokenize-selector-compact-child-expression
+  (is (= (tokenize-selector "foo>bar") '("foo" ">" "bar"))))
+
+(deftest tokenize-selector-crazy-cases
+  (is (= (tokenize-selector "x:ps-cls(foo bar:baz(\"goo fizz\"))[what ever] thing:fizz:buzz")
+         '("x:ps-cls(foo bar:baz(\"goo fizz\"))[what ever]" "thing:fizz:buzz"))))
 
 ; tokenize-element
 
@@ -293,6 +307,8 @@
 (deftest tokenize-pseudo-class-unclosed-paren
   (is (thrown? java.lang.RuntimeException
                (tokenize-pseudo-class ":foo(bar"))))
+
+
   
 
 ;; ==============================================================================
@@ -797,4 +813,12 @@
     (is (= '(\f)
            ($ "a::first-letter" t)))))
 
+(deftest $-not-expr
+  (let [t [:a {} [:b {}] [:c {}] [:d {}]]]
+    (is (= '([:b {}] [:d {}])
+           ($ "a *:not(c)" t)))))
 
+(deftest $-complicated-not
+  (let [t [:a {} [:b {}] [:c {:x "1"}] [:d {:x "foo" :y "3"}]]]
+    (is (= '([:c {:x "1"}])
+           ($ "*[x]:not(a [x=foo])" t)))))
