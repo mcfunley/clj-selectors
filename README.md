@@ -1,5 +1,7 @@
 # clj-selectors
 
+**This was my first toy clojure project and it is in a partially working state.** Leaving it here in case anyone wants to mess with it, but I am not using this.
+
 A Clojure implementation of [CSS Selectors](http://www.w3.org/TR/css3-selectors/). These can be used to match element trees produced by [clj-tagsoup](https://github.com/nathell/clj-tagsoup).
 
 ## Usage
